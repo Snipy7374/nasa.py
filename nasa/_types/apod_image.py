@@ -24,10 +24,6 @@ class RawAstronomyPicture(TypedDict):
     url: str
 
 
-class RawError(TypedDict):
-    pass
-
-
 def convert_to_date(string) -> datetime:
     return datetime.strptime(string, "%Y-%m-%d")
 
