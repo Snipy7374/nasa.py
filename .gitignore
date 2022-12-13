@@ -1,4 +1,3 @@
-test.py
 nasa/__pycache__/*
 nasa/_types/__pycache__/*
 nasa/.env
