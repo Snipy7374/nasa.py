@@ -25,7 +25,7 @@ class HTTPClient:
         self,
         *,
         route: Route,
-        params: dict[str, str] | None = None # type: ignore
+        params: dict[str, str]
     ) -> RawAstronomyPicture:
         url = route.url
         headers: dict[str, str] = {
@@ -34,11 +34,8 @@ class HTTPClient:
         if not self.__token:
             raise # add token exception here
 
-        if params:
+        if params and self.__token:
             params["api_key"] = self.__token
-
-        if not params and self.__token:
-            params: dict[str, str] = {"api_key": self.__token}
 
         response = requests.request(method=route.method, headers=headers, params=params, url=url).json()
         if "error" in response.keys():
