@@ -7,6 +7,7 @@ from datetime import datetime
 from ._http import HTTPClient, Route
 from .enums import Endpoints
 from ._types import AstronomyPicture, RawAstronomyPicture
+from .asset import SyncAsset
 
 
 __all__: tuple[str, ...] = (
@@ -26,7 +27,8 @@ class Client:
         return self._http.request(route=Route(method, endpoint), params=kwargs)
     
     def get_todays_astronomy_picture(self) -> AstronomyPicture:
-        return AstronomyPicture(**self.astronomy_request_impl("GET", Endpoints.APOD))
+        response = self.astronomy_request_impl("GET", Endpoints.APOD)
+        return AstronomyPicture(**response, image=SyncAsset(response.get("url"), self._http))
     
     def get_astronomy_picture(self, date: datetime | str) -> AstronomyPicture:
         if not isinstance(date, (datetime, str)):
@@ -39,4 +41,6 @@ class Client:
         except ValueError:
             raise ValueError("'date' parameter must follow the 'YYYY-mm-dd' date format")
         
-        return AstronomyPicture(**(self.astronomy_request_impl("GET", Endpoints.APOD, date=date)))
+        response = self.astronomy_request_impl("GET", Endpoints.APOD, date=date)
+        
+        return AstronomyPicture(**response, image=SyncAsset(response.get("url"), self._http))

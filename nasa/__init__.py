@@ -2,6 +2,7 @@ from typing import NamedTuple, Literal
 
 from .client import *
 from .enums import *
+from .asset import *
 
 __name__ = "Nasa.py"
 __author__ = "Snipy7374"

@@ -4,6 +4,8 @@ from datetime import datetime
 
 import attrs
 
+from ..asset import AsyncAsset, SyncAsset
+
 
 __all__: tuple[str, ...] = (
     "RawAstronomyPicture",
@@ -36,3 +38,6 @@ class AstronomyPicture:
     service_version: str
     title: str
     url: str
+    image: SyncAsset | AsyncAsset 
+    # i feel like this could be typed in a better way 
+    # (if not we could need another class just for async responses)

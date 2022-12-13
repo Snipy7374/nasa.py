@@ -41,5 +41,11 @@ class HTTPClient:
         if "error" in response.keys():
             print(response)
         return RawAstronomyPicture(**(response))
+    
+    @staticmethod
+    def get_image_as_bytes(url: str) -> bytes:
+        if not url:
+            return b""
+        return (requests.request(method="GET", url=url)).content
         
 
