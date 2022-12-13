@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TypedDict, TypeVar
+from typing import TypedDict
 from datetime import datetime
 
 import attrs
@@ -9,8 +9,6 @@ __all__: tuple[str, ...] = (
     "RawAstronomyPicture",
     "AstronomyPicture",
 )
-
-T = TypeVar("T")
 
 
 class RawAstronomyPicture(TypedDict):
