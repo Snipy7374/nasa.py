@@ -1,6 +1,4 @@
 from nasa import Client
-import requests
-import io
 
 
 c = Client(token="TOKEN_HERE")
