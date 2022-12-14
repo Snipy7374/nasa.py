@@ -3,6 +3,7 @@ from typing import NamedTuple, Literal
 from .client import *
 from .enums import *
 from .asset import *
+from ._types import *
 
 __name__ = "Nasa.py"
 __author__ = "Snipy7374"

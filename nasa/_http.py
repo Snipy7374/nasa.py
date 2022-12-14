@@ -3,9 +3,10 @@ from __future__ import annotations
 import requests
 import sys
 
-from typing import ClassVar
+from typing import ClassVar, Any
 
 from ._types import RawAstronomyPicture
+from .enums import Endpoints
 
 class Route:
     BASE_API_URL: ClassVar[str] = "https://api.nasa.gov"
@@ -26,7 +27,7 @@ class HTTPClient:
         *,
         route: Route,
         params: dict[str, str]
-    ) -> RawAstronomyPicture:
+    ) -> Any:
         url = route.url
         headers: dict[str, str] = {
             "User-Agent": self._user_agent,
@@ -38,9 +39,13 @@ class HTTPClient:
             params["api_key"] = self.__token
 
         response = requests.request(method=route.method, headers=headers, params=params, url=url).json()
-        if "error" in response.keys():
-            print(response)
-        return RawAstronomyPicture(**(response))
+        if route.path == Endpoints.APOD and isinstance(response, dict):
+            if "error" in response.keys():
+                print(response)
+            return RawAstronomyPicture(**(response))
+
+        elif route.path == Endpoints.APOD and isinstance(response, list):
+            return [RawAstronomyPicture(**(img_metadata)) for img_metadata in response]
     
     @staticmethod
     def get_image_as_bytes(url: str) -> bytes:

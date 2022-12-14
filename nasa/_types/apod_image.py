@@ -30,11 +30,11 @@ def convert_to_date(string) -> datetime:
 
 @attrs.define(kw_only=True, repr=True, eq=True)
 class AstronomyPicture:
-    copyright: str | None
+    copyright: str | None = None
     date: str = attrs.field(converter=convert_to_date)
     explanation: str
-    hdurl: str | None
-    media_type: str | None
+    hdurl: str | None = None
+    media_type: str | None = None
     service_version: str
     title: str
     url: str
