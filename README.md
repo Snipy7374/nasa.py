@@ -2,6 +2,7 @@
 WIP
 
 # Demo
+![image](https://user-images.githubusercontent.com/100313469/207457548-06b74b8d-a95b-46a0-87fd-4a7103a5a2c6.png)
 
 # Basic usage
 Create a client object
