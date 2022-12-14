@@ -72,35 +72,39 @@ class AsyncAsset:
 
 
 class SyncAsset:
-    __slot__: tuple[str, ...] = (
-        "_url",
-    )
-
     def __init__(self, url: str, http_client: HTTPClient) -> None:
-        self._url = url
+        self.__url = url
         self.__http = http_client
+        self._bytes = None
 
     def __eq__(self, __o: object) -> bool:
-        return isinstance(__o, SyncAsset) and self._url == __o.url
+        return isinstance(__o, SyncAsset) and self.__url == __o.url
     
     def __len__(self) -> int:
-        return len(self._url)
+        return len(self.__url)
     
     def __repr__(self) -> str:
-        return f"SyncAsset(url={self._url!r})"
+        return f"SyncAsset(url={self.__url!r})"
     
     def __str__(self) -> str:
-        return self._url
+        return self.__url
     
     def __hash__(self) -> int:
-        return hash(self._url)
+        return hash(self.__url)
     
     @property
     def url(self) -> str:
-        return self._url
+        return self.__url
 
     def read(self) -> bytes:
-        return self.__http.get_image_as_bytes(self.url)
+        self._bytes = self.__http.get_image_as_bytes(self.__url)
+        return self._bytes
+    
+    @property
+    def bytes_asset(self) -> bytes:
+        if not self._bytes:
+            return self.read()
+        return self._bytes
 
     @overload
     def save(

@@ -6,4 +6,3 @@ __all__: tuple[str, ...] = (
 
 class Endpoints(str, Enum):
     APOD = "/planetary/apod"
-

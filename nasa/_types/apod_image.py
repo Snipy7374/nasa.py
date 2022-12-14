@@ -41,3 +41,11 @@ class AstronomyPicture:
     image: SyncAsset | AsyncAsset 
     # i feel like this could be typed in a better way 
     # (if not we could need another class just for async responses)
+
+    @property
+    def is_video(self) -> bool:
+        return not self.media_type == "image"
+    
+    @property
+    def is_image(self) -> bool:
+        return self.media_type == "image"

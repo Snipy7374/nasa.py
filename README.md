@@ -8,12 +8,12 @@ WIP
 Create a client object
 ```py
 import typing as t
-from nasa import Client
+from nasa import NasaSyncClient
 
 if t.TYPE_CHECKING:
     from nasa import AstronomyPicture
 
-client = Client(token="TOKEN_HERE")
+client = NasaSyncClient(token="TOKEN_HERE")
 ```
 get the todays astronomy picture
 ```py
@@ -28,8 +28,12 @@ astronomy_picture.image.save("image.png")
 - APOD (Astronomy picture of the day) - `/planetary/apod` - (all query parameters)
 
 # TODO
-- Add `is_video` property on AstronomyPicture (based on `media_type`)
-- Add support for the `count` query parameter on `/planetary/apod` endpoint to get multiple random image
+- ~~Add `is_video` property on AstronomyPicture (based on `media_type`)~~
+- ~~Add support for the `count` query parameter on `/planetary/apod` endpoint to get multiple random image~~
 - Solve typing issues with `typing.overload`s on `client.py`
 - Support other endpoints
-- Add docs :) 
+- Add async client & methods
+- Add logging
+- Add docs :)
+- Add developing tools
+- Add workflows on github
