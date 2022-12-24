@@ -1,9 +1,11 @@
 from __future__ import annotations
+from typing import ClassVar, Any
 
 import requests
 import sys
+import asyncio
 
-from typing import ClassVar, Any
+import aiohttp
 
 from ._types import RawAstronomyPicture
 from .enums import Endpoints
@@ -17,18 +19,20 @@ class Route:
         self.url = self.BASE_API_URL + self.path
 
 
-class HTTPClient:
-    def __init__(self, token: str | None = None) -> None:
+class _BaseHTTPClient:
+    _user_agent: str = f"Nasa.py 0.0.1a (GitHub here) Python/{sys.version_info[0]}.{sys.version_info[1]} requests/{requests.__version__}"
+
+
+class HTTPClient(_BaseHTTPClient):
+    def __init__(self, *, token: str | None = None) -> None:
         self.__token = token
-        self._user_agent = f"Nasa.py 0.0.1a (GitHub here) Python/{sys.version_info[0]}.{sys.version_info[1]} requests/{requests.__version__}"
 
     def request(
         self,
         *,
         route: Route,
-        params: dict[str, str]
+        params: dict[str, Any]
     ) -> Any:
-        url = route.url
         headers: dict[str, str] = {
             "User-Agent": self._user_agent,
         }
@@ -38,14 +42,16 @@ class HTTPClient:
         if params and self.__token:
             params["api_key"] = self.__token
 
-        response = requests.request(method=route.method, headers=headers, params=params, url=url).json()
+        response = requests.request(method=route.method, headers=headers, params=params, url=route.url).json()
         if route.path == Endpoints.APOD and isinstance(response, dict):
             if "error" in response.keys():
                 print(response)
             return RawAstronomyPicture(**(response))
 
         elif route.path == Endpoints.APOD and isinstance(response, list):
-            return [RawAstronomyPicture(**(img_metadata)) for img_metadata in response]
+            return [RawAstronomyPicture(**img_metadata) for img_metadata in response]
+        
+        return response
     
     @staticmethod
     def get_image_as_bytes(url: str) -> bytes:
@@ -54,3 +60,53 @@ class HTTPClient:
         return (requests.request(method="GET", url=url)).content
         
 
+class AsyncHTTPClient(_BaseHTTPClient):
+    def __init__(self, *, loop = None, token: str | None = None, session: aiohttp.ClientSession | None = None) -> None:
+        self._loop = loop or asyncio.get_event_loop()
+        self.__token = token
+        self._session = session or aiohttp.ClientSession()
+
+    async def request(
+        self,
+        *,
+        route: Route,
+        params: dict[str, Any] = {}
+    ) -> Any:
+        headers: dict[str, str] = {
+            "User-Agent": self._user_agent,
+        }
+
+        if not self.__token:
+            raise # token exc here
+
+        params["api_key"] = self.__token
+        async with self._session.request(route.method, route.url, params=params) as resp:
+            content = await resp.json()
+
+            if isinstance(content, dict):
+                if "error" in content.keys():
+                    return content # RawAPIError
+
+                if route.path == Endpoints.APOD and resp.status == 200:
+                    return RawAstronomyPicture(**content)
+            
+            elif isinstance(content, list):
+                if route.path == Endpoints.APOD and resp.status == 200:
+                    return [RawAstronomyPicture(**img_metadata) for img_metadata in content]
+
+
+
+        #self._loop.create_task(self._session.close(), name="Session closer") #i should close the session only when there's an exception
+        # or when there's a keyboard interrupt also if the session obj was provided by the user i should not close it
+        # the user should handle it himself (i'll provide a method called close() to close a session)
+
+    async def close(self) -> None:
+        """Closes the aiohttp.ClientSession session"""
+        await self._session.close()
+
+    @staticmethod
+    async def get_image_as_bytes(url: str) -> bytes:
+        if not url:
+            return b""
+        async with aiohttp.request("GET", url=url) as resp:
+            return await resp.read()
