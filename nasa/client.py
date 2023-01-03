@@ -163,7 +163,7 @@ class NasaAsyncClient(_BaseClient):
         self.__http = AsyncHTTPClient(token=self.__token)
     
     async def __aenter__(self):
-        pass
+        return self
 
     async def __aexit__(self, type, value, traceback):
         await self.__http.close()
