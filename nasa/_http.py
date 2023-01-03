@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import ClassVar, Any
+from typing import ClassVar, Any, TYPE_CHECKING
 
 import requests
 import sys
@@ -7,8 +7,10 @@ import asyncio
 
 import aiohttp
 
-from ._types import RawAstronomyPicture
 from .enums import Endpoints
+
+if TYPE_CHECKING:
+    from ._types import RawAstronomyPicture
 
 class Route:
     BASE_API_URL: ClassVar[str] = "https://api.nasa.gov"
@@ -46,10 +48,10 @@ class HTTPClient(_BaseHTTPClient):
         if route.path == Endpoints.APOD and isinstance(response, dict):
             if "error" in response.keys():
                 print(response)
-            return RawAstronomyPicture(**(response))
+            return response
 
         elif route.path == Endpoints.APOD and isinstance(response, list):
-            return [RawAstronomyPicture(**img_metadata) for img_metadata in response]
+            return response
         
         return response
     
@@ -88,11 +90,11 @@ class AsyncHTTPClient(_BaseHTTPClient):
                     return content # RawAPIError
 
                 if route.path == Endpoints.APOD and resp.status == 200:
-                    return RawAstronomyPicture(**content)
+                    return content
             
             elif isinstance(content, list):
                 if route.path == Endpoints.APOD and resp.status == 200:
-                    return [RawAstronomyPicture(**img_metadata) for img_metadata in content]
+                    return content
 
 
 
