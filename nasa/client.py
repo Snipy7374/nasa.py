@@ -64,6 +64,10 @@ class NasaSyncClient(_BaseClient):
         
         self.__token = token
         self.__http = HTTPClient(token=self.__token)
+    
+    @property
+    def http_client(self) -> HTTPClient:
+        return self.__http
 
     @overload
     def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs: None) -> RawAstronomyPicture:
@@ -167,6 +171,10 @@ class NasaAsyncClient(_BaseClient):
 
     async def __aexit__(self, type, value, traceback):
         await self.__http.close()
+    
+    @property
+    def http_client(self) -> AsyncHTTPClient:
+        return self.__http
     
     @overload
     async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs: None) -> RawAstronomyPicture:

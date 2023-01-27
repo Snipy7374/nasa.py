@@ -1,16 +1,14 @@
 from __future__ import annotations
-from typing import ClassVar, Any, TYPE_CHECKING
+from typing import ClassVar, Any
 
 import requests
 import sys
 import asyncio
+from asyncio import AbstractEventLoop
 
 import aiohttp
+from aiohttp.client_exceptions import ContentTypeError
 
-from .enums import Endpoints
-
-if TYPE_CHECKING:
-    from ._types import RawAstronomyPicture
 
 class Route:
     BASE_API_URL: ClassVar[str] = "https://api.nasa.gov"
@@ -44,16 +42,7 @@ class HTTPClient(_BaseHTTPClient):
         if params and self.__token:
             params["api_key"] = self.__token
 
-        response = requests.request(method=route.method, headers=headers, params=params, url=route.url).json()
-        if route.path == Endpoints.APOD and isinstance(response, dict):
-            if "error" in response.keys():
-                print(response)
-            return response
-
-        elif route.path == Endpoints.APOD and isinstance(response, list):
-            return response
-        
-        return response
+        return requests.request(method=route.method, headers=headers, params=params, url=route.url).json()
     
     @staticmethod
     def get_image_as_bytes(url: str) -> bytes:
@@ -63,10 +52,16 @@ class HTTPClient(_BaseHTTPClient):
         
 
 class AsyncHTTPClient(_BaseHTTPClient):
-    def __init__(self, *, loop = None, token: str | None = None, session: aiohttp.ClientSession | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        loop: AbstractEventLoop | None = None,
+        token: str | None = None,
+        session: aiohttp.ClientSession | None = None
+    ) -> None:
         self._loop = loop or asyncio.get_event_loop()
         self.__token = token
-        self._session = session or aiohttp.ClientSession()
+        self._session = session or aiohttp.ClientSession(trust_env=True)
 
     async def request(
         self,
@@ -82,19 +77,12 @@ class AsyncHTTPClient(_BaseHTTPClient):
             raise # token exc here
 
         params["api_key"] = self.__token
-        async with self._session.request(route.method, route.url, params=params) as resp:
-            content = await resp.json()
-
-            if isinstance(content, dict):
-                if "error" in content.keys():
-                    return content # RawAPIError
-
-                if route.path == Endpoints.APOD and resp.status == 200:
-                    return content
-            
-            elif isinstance(content, list):
-                if route.path == Endpoints.APOD and resp.status == 200:
-                    return content
+        async with self._session.request(route.method, route.url, params=params, ssl=False, headers=headers) as resp:
+            try:
+                content = await resp.json()
+            except ContentTypeError:
+                content = await resp.text()
+            return content
 
 
 

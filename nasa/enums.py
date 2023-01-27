@@ -7,3 +7,4 @@ __all__: tuple[str, ...] = (
 class Endpoints(str, Enum):
     APOD = "/planetary/apod"
     NEOWS = "/neo/rest/v1/"
+    EPIC = "/EPIC/api/"

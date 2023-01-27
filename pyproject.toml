@@ -1,0 +1,16 @@
+[project]
+name = "Nasa.py"
+description = "A python API wrapper for the NASA API"
+readme = "README.md"
+authors = [
+    { name = "Snipy7374" }
+]
+requires-python = ">=3.10"
+keywords = ["Nasa", "Nasa.py", "Nasa API"]
+license = { text = "MIT" }
+
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+reportUnusedImport = false
