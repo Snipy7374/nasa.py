@@ -8,4 +8,5 @@ image.png
 async_image.png
 
 nasa/docs/_build
+nasa/docs/_build/html
 nasa/docs/build
