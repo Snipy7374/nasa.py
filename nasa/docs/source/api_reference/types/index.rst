@@ -1,0 +1,7 @@
+Types
+-----
+
+.. toctree::
+    :hidden:
+
+    payloads

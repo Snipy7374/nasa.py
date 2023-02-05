@@ -6,3 +6,6 @@ nasa/.env
 test.py
 image.png
 async_image.png
+
+nasa/docs/_build
+nasa/docs/build

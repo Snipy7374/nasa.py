@@ -14,3 +14,6 @@ license = { text = "MIT" }
 typeCheckingMode = "strict"
 
 reportUnusedImport = false
+reportUnknownParameterType = false
+reportMissingParameterType = false
+reportUnnecessaryIsInstance = false

@@ -57,6 +57,6 @@ async def main():
 - Support other endpoints
 - ~~Add async client & methods~~
 - Add logging
-- Add docs :)
+- ~~Add docs :)~~
 - Add developing tools
 - Add workflows on github

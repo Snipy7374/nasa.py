@@ -20,6 +20,7 @@ class Route:
 
 
 class _BaseHTTPClient:
+    """The base HTTPClient."""
     _user_agent: str = f"Nasa.py 0.0.1a (GitHub here) Python/{sys.version_info[0]}.{sys.version_info[1]} requests/{requests.__version__}"
 
 
@@ -62,6 +63,10 @@ class AsyncHTTPClient(_BaseHTTPClient):
         self._loop = loop or asyncio.get_event_loop()
         self.__token = token
         self._session = session or aiohttp.ClientSession(trust_env=True)
+    
+    @property
+    def is_closed(self) -> bool:
+        return self._session.closed
 
     async def request(
         self,

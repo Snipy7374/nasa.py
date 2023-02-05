@@ -36,11 +36,28 @@ class _BaseAsset:
     
     @property
     def url(self) -> str:
+        """:class:`str`: The url of the asset."""
         return self._url
     
 
 
 class AsyncAsset(_BaseAsset):
+    """Represents an asset returned by the NASA Api as a python object.
+    
+    Supported Operations
+    --------------------
+        .. container:: operations
+
+            .. describe:: x == y
+
+                Checks if two Assets holds the same file.
+        
+            .. describe:: x != y
+
+                Checks if two Assets don't holds the same file.
+
+    .. versionadded:: 0.0.1
+    """
     def __init__(self, url: str, http_client: AsyncHTTPClient) -> None:
         self._url = url
         self.__http = http_client
@@ -52,11 +69,30 @@ class AsyncAsset(_BaseAsset):
         return f"AsyncAsset(url={self._url!r})"
 
     async def read(self) -> bytes:
+        """Fetch the file and return its bytes.
+        
+        .. note::
+            This function doesn't use the token. As a result requests
+            made with this method won't reduce your request counter.
+
+        Returns
+        -------
+        :class:`bytes`
+            The ``bytes`` of the file.
+        """
         self._bytes = await self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
     @property
     def bytes_asset(self) -> bytes | None:
+        """Union[:class:`bytes`, ``None``]: the bytes of the asset if 
+        already cached otherwise ``None``.
+        
+        .. hint::
+            This property can be ``None`` if the Asset wasn't previously fetched.
+            You should check if ``bytes_asset`` is ``None`` and then fetch it.
+            Check the example at :attr:`AstronomyPicture.image`.
+        """
         # i can't do the same thing as the SyncAsset
         # coz properties are syncronous so this property
         # could return None, if it return None then it means that the bytes
@@ -77,7 +113,7 @@ class AsyncAsset(_BaseAsset):
     @overload
     async def save(
         self,
-        file: str | bytes | os.PathLike,
+        file: str | bytes | os.PathLike[str],
         *,
         seek_at_end: bool = ...
     ) -> StrOrBytes:
@@ -85,10 +121,25 @@ class AsyncAsset(_BaseAsset):
 
     async def save(
         self,
-        file: str | bytes | os.PathLike | io.BufferedIOBase,
+        file: str | bytes | os.PathLike[str] | io.BufferedIOBase,
         *,
         seek_at_end: bool = True
     ) -> int | StrOrBytes:
+        """Saves the Asset locally. If ``file`` is ``io.BufferedIOBase`` returns the
+        numbers of bytes writed otherwise the name of the file or the path where
+        it was saved.
+
+        Parameters
+        ----------
+        file: Union[:class:`str`, :class:`bytes`, :class:`os.PathLike`, :class:`io.BufferedIOBase`]
+        seek_at_end: :class:`bool`
+
+        Returns
+        -------
+        Union[:class:`int`, :class:`str`, :class:`bytes`, :class:`os.PathLike`]
+            If ``file`` is :class:`io.BufferedIOBase` the number of bytes written; otherwise
+            the name of the file or the path where it was saved.
+        """
         content = self._bytes if self._bytes else await self.read()
         if isinstance(file, io.BufferedIOBase):
             written = file.write(content)
@@ -101,6 +152,22 @@ class AsyncAsset(_BaseAsset):
             return f.name
 
 class SyncAsset(_BaseAsset):
+    """Represents an asset returned by the NASA Api as a python object.
+    
+    Supported Operations
+    --------------------
+        .. container:: operations
+
+            .. describe:: x == y
+
+                Checks if two Assets holds the same file.
+        
+            .. describe:: x != y
+
+                Checks if two Assets don't holds the same file.
+
+    .. versionadded:: 0.0.1
+    """
     def __init__(self, url: str, http_client: HTTPClient) -> None:
         self._url = url
         self.__http = http_client
@@ -112,11 +179,30 @@ class SyncAsset(_BaseAsset):
         return f"SyncAsset(url={self._url!r})"
 
     def read(self) -> bytes:
+        """Fetch the file and return its bytes.
+        
+        .. note::
+            This function doesn't use the token. As a result requests
+            made with this method won't reduce your request counter.
+
+        Returns
+        -------
+        :class:`bytes`
+            The ``bytes`` of the file.
+        """
         self._bytes = self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
     @property
     def bytes_asset(self) -> bytes:
+        """Union[:class:`bytes`, ``None``]: The bytes of the asset if 
+        already cached otherwise ``None``.
+        
+        .. hint::
+            This property can be ``None`` if the Asset wasn't previously fetched.
+            You should check if ``bytes_asset`` is ``None`` and then fetch it.
+            Check the example at :attr:`AstronomyPicture.image`.
+        """
         if not self._bytes:
             return self.read()
         return self._bytes
@@ -124,7 +210,7 @@ class SyncAsset(_BaseAsset):
     @overload
     def save(
         self,
-        file: str | bytes | os.PathLike,
+        file: str | bytes | os.PathLike[str],
         *,
         seek_at_end: bool = ...
     ) -> str:
@@ -141,10 +227,25 @@ class SyncAsset(_BaseAsset):
 
     def save(
         self,
-        file: str | bytes | os.PathLike | io.BufferedIOBase,
+        file: str | bytes | os.PathLike[str] | io.BufferedIOBase,
         *,
         seek_at_end: bool = True
     ) -> int | str:
+        """Saves the Asset locally. If ``file`` is ``io.BufferedIOBase`` returns the
+        numbers of bytes writed otherwise the name of the file or the path where
+        it was saved.
+
+        Parameters
+        ----------
+        file: Union[:class:`str`, :class:`bytes`, :class:`os.PathLike`, :class:`io.BufferedIOBase`]
+        seek_at_end: :class:`bool`
+
+        Returns
+        -------
+        Union[:class:`int`, :class:`str`]
+            If ``file`` is :class:`io.BufferedIOBase` the number of bytes written; otherwise
+            the name of the file or the path where it was saved.
+        """
         content = self._bytes if self._bytes else self.read()
         if isinstance(file, io.BufferedIOBase):
             written = file.write(content)
