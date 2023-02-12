@@ -111,16 +111,17 @@ class AstronomyPicture:
 
                 .. code-block:: python3
 
-                    image: AstronomyPicture = await client.get_astronomy_picture()
+                    apod_obj: AstronomyPicture = await client.get_astronomy_picture()
                     # if "bytes_asset" is None then our bytes aren't cached so we fetch the file
-                    image_bytes = image.bytes_asset or await image.read()
+                    # this example assumes that you're using the NasaAsyncClient
+                    image_bytes = apod_obj.bytes_asset or await apod_obj.image.read()
                 
                 .. caution::
                     :attr:`AsyncAsset.bytes_asset` can be ``None`` if the bytes of the asset aren't cached yet.
                     You must handle that case yourself as shown above.
     """
     copyright: str | None = None
-    date: str = attrs.field(converter=convert_to_date)
+    date: datetime = attrs.field(converter=convert_to_date)
     explanation: str
     hdurl: str | None = None
     media_type: str | None = None

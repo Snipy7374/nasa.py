@@ -5,6 +5,7 @@ from typing import (
     AsyncGenerator,
     Any,
     TYPE_CHECKING,
+    cast
 )
 
 import logging
@@ -188,7 +189,17 @@ class NasaSyncClient(_BaseClient):
             self._validate_date(date)
 
         response = self._astronomy_request_impl("GET", Endpoints.APOD, date=date)
-        return AstronomyPicture(**response, image=SyncAsset(response.get("url"), self.__http)) # type: ignore i have an overload issue here, big skill issue
+        return AstronomyPicture(
+            copyright=response.get("copyright", None),
+            date=cast(datetime, response["date"]),
+            explanation=response["explanation"],
+            hdurl=response.get("hdurl", None),
+            media_type=response.get("media_type", None),
+            service_version=response["service_version"],
+            title=response["title"],
+            url=response["url"],
+            image=SyncAsset(response.get("url"), self.__http)
+        )
 
     def _get_multi_astronomy_pictures_impl(self, start_date: datetime | str, end_date: datetime | str | None = None) -> list[RawAstronomyPicture]:
         start_date, end_date = self._date_validator(start_date, end_date)
@@ -217,7 +228,7 @@ class NasaSyncClient(_BaseClient):
         return [
             AstronomyPicture(
                 copyright=img_metadata.get("copyright", None),
-                date=img_metadata["date"],
+                date=cast(datetime, img_metadata["date"]),
                 explanation=img_metadata["explanation"],
                 hdurl=img_metadata.get("hdurl", None),
                 media_type=img_metadata.get("media_type", None),
@@ -249,7 +260,14 @@ class NasaSyncClient(_BaseClient):
         response = self._get_multi_astronomy_pictures_impl(start_date, end_date)
         for img_metadata in response:
             yield AstronomyPicture(
-                **img_metadata,
+                copyright=img_metadata.get("copyright", None),
+                date=cast(datetime, img_metadata["date"]),
+                explanation=img_metadata["explanation"],
+                hdurl=img_metadata.get("hdurl", None),
+                media_type=img_metadata.get("media_type", None),
+                service_version=img_metadata["service_version"],
+                title=img_metadata["title"],
+                url=img_metadata["url"],
                 image=SyncAsset(img_metadata.get("url"), self.__http)
             )
     
@@ -277,7 +295,7 @@ class NasaSyncClient(_BaseClient):
         return [
             AstronomyPicture(
                 copyright=img_metadata.get("copyright", None),
-                date=img_metadata["date"],
+                date=cast(datetime, img_metadata["date"]),
                 explanation=img_metadata["explanation"],
                 hdurl=img_metadata.get("hdurl", None),
                 media_type=img_metadata.get("media_type", None),
@@ -524,7 +542,14 @@ class NasaAsyncClient(_BaseClient):
         response = await self._get_multi_astronomy_pictures_impl(start_date, end_date)
         return [
             AstronomyPicture(
-                **img_metadata,
+                copyright=img_metadata.get("copyright", None),
+                date=cast(datetime, img_metadata["date"]),
+                explanation=img_metadata["explanation"],
+                hdurl=img_metadata.get("hdurl", None),
+                media_type=img_metadata.get("media_type", None),
+                service_version=img_metadata["service_version"],
+                title=img_metadata["title"],
+                url=img_metadata["url"],
                 image=AsyncAsset(img_metadata.get("url"), self.__http)
             )
             for img_metadata in response
@@ -550,7 +575,14 @@ class NasaAsyncClient(_BaseClient):
         response = await self._get_multi_astronomy_pictures_impl(start_date, end_date)
         for img_metadata in response:
             yield AstronomyPicture(
-                **img_metadata,
+                copyright=img_metadata.get("copyright", None),
+                date=cast(datetime, img_metadata["date"]),
+                explanation=img_metadata["explanation"],
+                hdurl=img_metadata.get("hdurl", None),
+                media_type=img_metadata.get("media_type", None),
+                service_version=img_metadata["service_version"],
+                title=img_metadata["title"],
+                url=img_metadata["url"],
                 image=AsyncAsset(img_metadata.get("url"), self.__http)
             )
     
@@ -577,7 +609,14 @@ class NasaAsyncClient(_BaseClient):
 
         return [
             AstronomyPicture(
-                **img_metadata,
+                copyright=img_metadata.get("copyright", None),
+                date=cast(datetime, img_metadata["date"]),
+                explanation=img_metadata["explanation"],
+                hdurl=img_metadata.get("hdurl", None),
+                media_type=img_metadata.get("media_type", None),
+                service_version=img_metadata["service_version"],
+                title=img_metadata["title"],
+                url=img_metadata["url"],
                 image=AsyncAsset(img_metadata.get("url"), self.__http)
             )
             for img_metadata in response
