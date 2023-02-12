@@ -1,5 +1,9 @@
 # nasa.py
-WIP
+<p align="center">
+    <a href="https://github.com/Snipy7374/nasa.py/blob/master/LICENSE"><img alt="GitHub license file" src="https://img.shields.io/github/license/snipy7374/nasa.py?style=for-the-badge"></a>
+    <a href="https://github.com/Snipy7374/nasa.py/commits/master"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/snipy7374/nasa.py?style=for-the-badge"></a>
+</p>
+Work in progress
 
 to run the docs use 
 ```
