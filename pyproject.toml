@@ -3,12 +3,20 @@ name = "Nasa.py"
 description = "A python API wrapper for the NASA API"
 readme = "README.md"
 authors = [
-    { name = "Snipy7374" }
+    {name = "Snipy7374", email="snipy7374@gmail.com"}
 ]
 requires-python = ">=3.10"
 keywords = ["Nasa", "Nasa.py", "Nasa API"]
-license = { text = "MIT" }
+license = {text = "MIT"}
+dynamic = ["version", "dependencies"]
 
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "nasa.__version__"}
+dependencies = {file = ["requirements.txt"]}
 
 [tool.pyright]
 typeCheckingMode = "strict"
