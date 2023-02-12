@@ -345,7 +345,10 @@ class NasaSyncClient(_BaseClient):
         *,
         image_type: EpicImageType = EpicImageType.natural
     ) -> list[EpicImage]:
-        """
+        """Fetch earth images from the EPIC endpoint.
+
+        .. versionadded:: 0.0.1 
+
         Parameters
         ----------
         date: Optional[:class:`datetime.datetime`]
@@ -356,7 +359,7 @@ class NasaSyncClient(_BaseClient):
         
         Returns
         -------
-        list[:class:`EpicImage`]
+        list[:class:`EpicImage`] Returns the requested epic images.
         """
         date_ = self._date_to_str(datetime.now())
         if date:

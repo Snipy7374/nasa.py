@@ -45,7 +45,7 @@ class AsyncAsset(_BaseAsset):
     """Represents an asset returned by the NASA Api as a python object.
     
     Supported Operations
-    --------------------
+
         .. container:: operations
 
             .. describe:: x == y
@@ -155,7 +155,7 @@ class SyncAsset(_BaseAsset):
     """Represents an asset returned by the NASA Api as a python object.
     
     Supported Operations
-    --------------------
+
         .. container:: operations
 
             .. describe:: x == y
