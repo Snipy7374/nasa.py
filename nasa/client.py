@@ -129,7 +129,7 @@ class NasaSyncClient(_BaseClient):
     .. versionadded:: 0.0.1
 
     Parameters
-    ---------
+    ----------
     token: Optional[:class:`str`]
         The token that should be used to connect to the NASA Api.
     """
@@ -352,7 +352,7 @@ class NasaSyncClient(_BaseClient):
         Parameters
         ----------
         date: Optional[:class:`datetime.datetime`]
-            If not provided fetchs the default :class:`EpicImage`s returned
+            If not provided fetchs the default :class:`EpicImage`\s returned
             by the Nasa API.
         image_type: :class:`EpicImageType`
             Defaults to :attr:`EpicImageType.natural`.

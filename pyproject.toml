@@ -12,7 +12,7 @@ license = { text = "MIT" }
 
 [tool.pyright]
 typeCheckingMode = "strict"
-
+reportInvalidStringEscapeSequence = false
 reportUnusedImport = false
 reportUnknownParameterType = false
 reportUnknownArgumentType = false

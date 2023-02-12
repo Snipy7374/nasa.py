@@ -3,7 +3,7 @@ WIP
 
 to run the docs use 
 ```
-sphinx-autobuild -a docs/source docs/_build/html
+sphinx-autobuild -a docs/source docs/_build/html --watch nasa
 ```
 
 # Demo

@@ -38,8 +38,9 @@ autodoc_preserve_defaults = True
 autoclass_content = "class"
 
 autodoc_type_aliases = {
-    #"AstronomyPicture": "AstronomyPicture",
-    "_RawSpatialCoordinates": "nasa._RawSpatialCoordinates" 
+    "AstronomyPicture": "AstronomyPicture",
+    "_RawSpatialCoordinates": "nasa._RawSpatialCoordinates",
+    "EpicImage": "EpicImage"
 }
 autodoc_default_options = {
     "exclude-members": "__init__, __new__",
