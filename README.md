@@ -70,10 +70,14 @@ async def main():
 # TODO
 - ~~Add `is_video` property on AstronomyPicture (based on `media_type`)~~
 - ~~Add support for the `count` query parameter on `/planetary/apod` endpoint to get multiple random image~~
-- Solve typing issues with `typing.overload`s on `client.py`
+- ~~Solve typing issues with `typing.overload`s on `client.py`~~
 - Support other endpoints
 - ~~Add async client & methods~~
 - Add logging
 - ~~Add docs :)~~
 - Add developing tools
 - Add workflows on github
+- Create the first release
+- Upload the project on PyPi
+- Customize the docs
+- Add examples
