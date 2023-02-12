@@ -69,7 +69,8 @@ pygments_dark_style = "monokai"
 html_theme = "furo"
 #html_static_path = ["_static"]
 html_theme_options = {
-    "source_repository": "https://github.com/Snipy7374/nasa.py",
+    "source_repository": "https://github.com/Snipy7374/nasa.py/",
     "source_branch": "master",
+    "source_directory": "docs/source/",
     "announcement": "<b><em>Important</em></b> this package isn't in it's stable version yet! Breaking changes may occur at any time.",
 }
