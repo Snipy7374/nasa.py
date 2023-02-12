@@ -2,6 +2,5 @@ Types
 -----
 
 .. toctree::
-    :hidden:
 
     payloads

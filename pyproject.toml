@@ -15,5 +15,7 @@ typeCheckingMode = "strict"
 
 reportUnusedImport = false
 reportUnknownParameterType = false
+reportUnknownArgumentType = false
+reportUnknownMemberType = false
 reportMissingParameterType = false
 reportUnnecessaryIsInstance = false

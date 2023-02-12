@@ -32,7 +32,7 @@ class HTTPClient(_BaseHTTPClient):
         self,
         *,
         route: Route,
-        params: dict[str, Any]
+        params: dict[str, Any] = {}
     ) -> Any:
         headers: dict[str, str] = {
             "User-Agent": self._user_agent,
@@ -40,10 +40,13 @@ class HTTPClient(_BaseHTTPClient):
         if not self.__token:
             raise # add token exception here
 
-        if params and self.__token:
-            params["api_key"] = self.__token
+        params["api_key"] = self.__token
+        response = requests.request(method=route.method, headers=headers, params=params, url=route.url)
 
-        return requests.request(method=route.method, headers=headers, params=params, url=route.url).json()
+        try:
+            return response.json()
+        except:
+            return response
     
     @staticmethod
     def get_image_as_bytes(url: str) -> bytes:

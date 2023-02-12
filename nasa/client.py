@@ -11,12 +11,14 @@ import logging
 from datetime import datetime
 
 from ._http import AsyncHTTPClient, HTTPClient, Route
-from .enums import Endpoints
+from .enums import Endpoints, EpicImageType
 from ._types import (
     AstronomyPicture,
     EpicImage,
     EarthLikeCoordinates,
     SpatialCoordinates,
+    AttitudeQuaternions,
+    Coordinates,
 )
 from .asset import SyncAsset, AsyncAsset
 
@@ -87,7 +89,7 @@ class _BaseClient:
         # with the format YYYY-mm-dd
         return datetime.strftime(date, "%Y-%m-%d")
     
-    def _date_validator(self, start_date: datetime | str, end_date: datetime | str | None) -> None:
+    def _date_validator(self, start_date: datetime | str, end_date: datetime | str | None) -> tuple[str, str | None]:
         """
         Parameters
         ---------
@@ -103,8 +105,7 @@ class _BaseClient:
             raise ValueError(f"'start_date' must be of type 'str' or 'datetime.datetime' not {start_date.__class__!r}")
 
         if isinstance(start_date, datetime):
-            start_date = datetime.strftime(start_date, "YYYY-mm-dd")
-        self._validate_date(start_date)
+            start_date = datetime.strftime(start_date, "%Y-%m-%d")
         
         if not isinstance(end_date, (datetime, str)) and end_date is not None:
             raise ValueError(f"'end_date' must be of type 'datetime.datetime', 'str' or 'None' not {end_date.__class__!r}")
@@ -113,8 +114,8 @@ class _BaseClient:
             if not isinstance(end_date, (datetime, str)):
                 raise ValueError(f"'end_date' must be of type 'str' or 'datetime.datetime' not {end_date.__class__!r}")
             if isinstance(end_date, datetime):
-                end_date = datetime.strftime(end_date, "YYYY-mm-dd")
-            self._validate_date(end_date)
+                end_date = datetime.strftime(end_date, "%Y-%m-%d")
+        return (start_date, end_date)
 
 
 
@@ -145,14 +146,18 @@ class NasaSyncClient(_BaseClient):
         return self.__http
 
     @overload
-    def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs) -> RawAstronomyPicture:
+    def _astronomy_request_impl(self, method: str, endpoint: Endpoints, *, date: datetime | str | None) -> RawAstronomyPicture:
         ...
     
     @overload
-    def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs) -> list[RawAstronomyPicture]:
+    def _astronomy_request_impl(self, method: str, endpoint: Endpoints, *, start_date: datetime | str, end_date: datetime | str | None) -> list[RawAstronomyPicture]:
+        ...
+    
+    @overload
+    def _astronomy_request_impl(self, method: str, endpoint: Endpoints, *, count: int) -> list[RawAstronomyPicture]:
         ...
 
-    def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs: dict[str, Any]) -> RawAstronomyPicture | list[RawAstronomyPicture]:
+    def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs) -> RawAstronomyPicture | list[RawAstronomyPicture]:
         return self.__http.request(route=Route(method, endpoint), params=kwargs)
     
     def get_astronomy_picture(self, date: datetime | str | None = None) -> AstronomyPicture:
@@ -177,7 +182,7 @@ class NasaSyncClient(_BaseClient):
         if date and not isinstance(date, (datetime, str)):
             raise ValueError(f"'date' must be of type 'str' or 'datetime.datetime' not {date.__class__!r}")
         if isinstance(date, datetime):
-            date = datetime.strftime(date, "YYYY-mm-dd")
+            date = datetime.strftime(date, "%Y-%m-%d")
 
         if date:
             self._validate_date(date)
@@ -186,7 +191,7 @@ class NasaSyncClient(_BaseClient):
         return AstronomyPicture(**response, image=SyncAsset(response.get("url"), self.__http)) # type: ignore i have an overload issue here, big skill issue
 
     def _get_multi_astronomy_pictures_impl(self, start_date: datetime | str, end_date: datetime | str | None = None) -> list[RawAstronomyPicture]:
-        self._date_validator(start_date, end_date)
+        start_date, end_date = self._date_validator(start_date, end_date)
         return self._astronomy_request_impl("GET", Endpoints.APOD, start_date=start_date, end_date=end_date)
 
 
@@ -211,9 +216,15 @@ class NasaSyncClient(_BaseClient):
         response = self._get_multi_astronomy_pictures_impl(start_date, end_date)
         return [
             AstronomyPicture(
-                **img_metadata,
-                image=SyncAsset(img_metadata.get("url"), self.__http
-                )
+                copyright=img_metadata.get("copyright", None),
+                date=img_metadata["date"],
+                explanation=img_metadata["explanation"],
+                hdurl=img_metadata.get("hdurl", None),
+                media_type=img_metadata.get("media_type", None),
+                service_version=img_metadata["service_version"],
+                title=img_metadata["title"],
+                url=img_metadata["url"],
+                image=SyncAsset(img_metadata.get("url"), self.__http)
             )
             for img_metadata in response
         ]
@@ -237,7 +248,10 @@ class NasaSyncClient(_BaseClient):
         """
         response = self._get_multi_astronomy_pictures_impl(start_date, end_date)
         for img_metadata in response:
-            yield AstronomyPicture(**img_metadata, image=SyncAsset(img_metadata.get("url"), self.__http))
+            yield AstronomyPicture(
+                **img_metadata,
+                image=SyncAsset(img_metadata.get("url"), self.__http)
+            )
     
     def get_rand_astronomy_pictures(self, count: int = 1) -> list[AstronomyPicture]:
         """Fetch a random number of astronomy pictures.
@@ -262,7 +276,14 @@ class NasaSyncClient(_BaseClient):
 
         return [
             AstronomyPicture(
-                **img_metadata,
+                copyright=img_metadata.get("copyright", None),
+                date=img_metadata["date"],
+                explanation=img_metadata["explanation"],
+                hdurl=img_metadata.get("hdurl", None),
+                media_type=img_metadata.get("media_type", None),
+                service_version=img_metadata["service_version"],
+                title=img_metadata["title"],
+                url=img_metadata["url"],
                 image=SyncAsset(img_metadata.get("url"), self.__http
                 )
             )
@@ -294,12 +315,86 @@ class NasaSyncClient(_BaseClient):
         return self._http.request(route=Route("GET", Endpoints.NEOWS + "neo/"), params={})
     """
 
-    def _epic_impl(self, method: str, endpoint: Endpoints, **kwargs: dict[str, Any]) -> RawEpicImage | list[RawEpicImage]:
-        return self.__http.request(route=Route(method, endpoint), params=kwargs)
+    @staticmethod
+    def _build_image_url(identifier: str, date: str, image_type: EpicImageType) -> str:
+        # todo: make somewhat possible to build different url file types
+        #   - png
+        #   - jpg
+        #   - thumbs
+        # maybe setattr new attrs on the Asset?
+
+        date = '/'.join(((date.split()[0]).split('-')))
+        # split the date as %Y/%m/%d without converting it as datetime object
+
+        image_type_ = "natural" if "natural" in image_type else "enhanced"
+        prefix = "epic_1b" if image_type_ == "natural" else "epic_RGB"
+        return f"{Endpoints.EPIC_IMG}/archive/{image_type_}/{date}/png/{prefix}_{identifier}.png"
+
+    def _epic_impl(self, method: str, endpoint: str, **kwargs) -> list[RawEpicImage]:
+        if not kwargs.get("date"):
+            del kwargs["date"]
+        
+        # i need to url encode things
+        if kwargs.get("date"):
+            endpoint += f"/{kwargs.get('date')}"
+        return self.__http.request(route=Route(method, endpoint))
     
-    def get_epic_images(self, date: datetime | None = None) -> EpicImage | list[EpicImage]:
-        pass
-        #self._epic_impl(method="GET")
+    def get_epic_images(
+        self,
+        date: datetime | None = None,
+        *,
+        image_type: EpicImageType = EpicImageType.natural
+    ) -> list[EpicImage]:
+        """
+        Parameters
+        ----------
+        date: Optional[:class:`datetime.datetime`]
+            If not provided fetchs the default :class:`EpicImage`s returned
+            by the Nasa API.
+        image_type: :class:`EpicImageType`
+            Defaults to :attr:`EpicImageType.natural`.
+        
+        Returns
+        -------
+        list[:class:`EpicImage`]
+        """
+        date_ = self._date_to_str(datetime.now())
+        if date:
+            date_ = self._date_to_str(date)
+
+        response = self._epic_impl(method="GET", endpoint=Endpoints.EPIC + image_type, date=date_)
+        return [
+            EpicImage(
+                identifier=epic.get("identifier"),
+                image_name=epic["image"],
+                image=SyncAsset(
+                    url=self._build_image_url(
+                        identifier=epic.get("identifier"),
+                        date=epic["date"],
+                        image_type=image_type
+                    ),
+                    http_client=self.__http
+                ),
+                date=epic["date"],
+                caption=epic["caption"],
+                centroid_coordinates=EarthLikeCoordinates(**epic["centroid_coordinates"]),
+                dscovr_j2000_position=SpatialCoordinates(**epic["dscovr_j2000_position"]),
+                lunar_j2000_position=SpatialCoordinates(**epic["lunar_j2000_position"]),
+                sun_j2000_position=SpatialCoordinates(**epic["sun_j2000_position"]),
+                attitude_quaternions=AttitudeQuaternions(**epic["attitude_quaternions"]),
+                coords=Coordinates(
+                    centroid_coordinates=EarthLikeCoordinates(**epic["coords"]["centroid_coordinates"]),
+                    dscovr_j2000_position=SpatialCoordinates(**epic["coords"]["dscovr_j2000_position"]),
+                    lunar_j2000_position=SpatialCoordinates(**epic["coords"]["lunar_j2000_position"]),
+                    sun_j2000_position=SpatialCoordinates(**epic["coords"]["sun_j2000_position"]),
+                    attitude_quaternions=AttitudeQuaternions(**epic["coords"]["attitude_quaternions"])
+                ),
+                version=epic["version"],
+                image_type=image_type
+            ) 
+            for epic in response
+        ]
+
 
 class NasaAsyncClient(_BaseClient):
     """An asynchronous client to make request to the NASA Api.
@@ -352,14 +447,22 @@ class NasaAsyncClient(_BaseClient):
         return self.__http
     
     @overload
-    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs: None) -> RawAstronomyPicture:
+    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints) -> RawAstronomyPicture:
+        ...
+
+    @overload
+    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, *, date: datetime | str | None) -> RawAstronomyPicture:
         ...
     
     @overload
-    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs) -> list[RawAstronomyPicture]:
+    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, *, start_date: datetime | str, end_date: datetime | str | None) -> list[RawAstronomyPicture]:
+        ...
+    
+    @overload
+    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, *, count: int) -> list[RawAstronomyPicture]:
         ...
 
-    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs: dict[str, Any]) -> RawAstronomyPicture | list[RawAstronomyPicture]:
+    async def _astronomy_request_impl(self, method: str, endpoint: Endpoints, **kwargs) -> RawAstronomyPicture | list[RawAstronomyPicture]:
         return await self.__http.request(route=Route(method, endpoint), params=kwargs)
 
     async def get_astronomy_picture(self, date: datetime | str | None = None) -> AstronomyPicture:
@@ -384,7 +487,7 @@ class NasaAsyncClient(_BaseClient):
         if date and not isinstance(date, (datetime, str)):
             raise ValueError(f"'date' must be of type 'str' or 'datetime.datetime' not {date.__class__!r}")
         if isinstance(date, datetime):
-            date = datetime.strftime(date, "YYYY-mm-dd")
+            date = datetime.strftime(date, "%Y-%m-%d")
 
         if date:
             self._validate_date(date)
@@ -394,8 +497,8 @@ class NasaAsyncClient(_BaseClient):
         return AstronomyPicture(**response, image=AsyncAsset(response.get("url"), self.__http)) # type: ignore i have an overload issue here, big skill issue
 
     async def _get_multi_astronomy_pictures_impl(self, start_date: datetime | str, end_date: datetime | str | None = None) -> list[RawAstronomyPicture]:
-        self._date_validator(start_date, end_date)
-        return await self._astronomy_request_impl("GET", Endpoints.APOD, start_date=start_date, end_date=end_date)
+        start_date, end_date = self._date_validator(start_date, end_date)
+        return await self._astronomy_request_impl("GET", Endpoints.APOD, start_date=start_date, end_date=end_date or "")  # aiohttp won't accept a 'None' parameter idk why
 
     async def get_range_astronomy_pictures(self, start_date: datetime | str, end_date: datetime | str | None = None) -> list[AstronomyPicture]:
         """Fetch multiple images with a given date range and
@@ -419,8 +522,7 @@ class NasaAsyncClient(_BaseClient):
         return [
             AstronomyPicture(
                 **img_metadata,
-                image=AsyncAsset(img_metadata.get("url"), self.__http
-                )
+                image=AsyncAsset(img_metadata.get("url"), self.__http)
             )
             for img_metadata in response
         ]
@@ -444,7 +546,10 @@ class NasaAsyncClient(_BaseClient):
         """
         response = await self._get_multi_astronomy_pictures_impl(start_date, end_date)
         for img_metadata in response:
-            yield AstronomyPicture(**img_metadata, image=AsyncAsset(img_metadata.get("url"), self.__http))
+            yield AstronomyPicture(
+                **img_metadata,
+                image=AsyncAsset(img_metadata.get("url"), self.__http)
+            )
     
     async def get_rand_astronomy_pictures(self, count: int = 1) -> list[AstronomyPicture]:
         """Fetch a random number of astronomy pictures.
@@ -470,8 +575,7 @@ class NasaAsyncClient(_BaseClient):
         return [
             AstronomyPicture(
                 **img_metadata,
-                image=AsyncAsset(img_metadata.get("url"), self.__http
-                )
+                image=AsyncAsset(img_metadata.get("url"), self.__http)
             )
             for img_metadata in response
         ]
