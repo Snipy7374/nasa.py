@@ -11,6 +11,10 @@ if TYPE_CHECKING:
 
 __all__: tuple[str, ...] = (
     "RawEpicImage",
+    "RawSpatialCoordinates",
+    "RawEarthLikeCoordinates",
+    "RawAttitudeQ",
+    "EpicCoordinates",
     "SpatialCoordinates",
     "EarthLikeCoordinates",
     "AttitudeQuaternions",
@@ -23,7 +27,7 @@ def convert_to_date(date: str) -> datetime:
     return datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
 
 
-class _RawSpatialCoordinates(TypedDict):
+class RawSpatialCoordinates(TypedDict):
     """Represents a :class:`SpatialCoordinates` raw payload.
 
     .. versionadded:: 0.0.1
@@ -39,7 +43,7 @@ class _RawSpatialCoordinates(TypedDict):
     z: str
 
 
-class _RawEarthLikeCoordinates(TypedDict):
+class RawEarthLikeCoordinates(TypedDict):
     """Represents a :class:`EarthLikeCoordinates` raw payload.
 
     .. versionadded:: 0.0.1
@@ -55,7 +59,7 @@ class _RawEarthLikeCoordinates(TypedDict):
     lon: str
 
 
-class _RawAttitudeQ(TypedDict):
+class RawAttitudeQ(TypedDict):
     """Rpresents a :class:`AttitudeQuaternions` raw payload.
 
     .. versionadded:: 0.0.1
@@ -73,29 +77,29 @@ class _RawAttitudeQ(TypedDict):
     q3: str
 
 
-class _EpicCoordinates(TypedDict):
+class EpicCoordinates(TypedDict):
     """Represents a :class:`Coordinates` raw payload.
 
     .. versionadded:: 0.0.1
 
     Attributes
     ----------
-    centroid_coordinates: :class:`_RawEarthLikeCoordinates`
+    centroid_coordinates: :class:`RawEarthLikeCoordinates`
         Geographical coordinates that the satellite is looking at.
-    dscovr_j2000_position: :class:`_RawSpatialCoordinates`
+    dscovr_j2000_position: :class:`RawSpatialCoordinates`
         Position of the satellite in space.
-    lunar_j2000_position: :class:`_RawSpatialCoordinates`
+    lunar_j2000_position: :class:`RawSpatialCoordinates`
         Position of the moon in space.
-    sun_j2000_position: :class:`_RawSpatialCoordinates`
+    sun_j2000_position: :class:`RawSpatialCoordinates`
         Position of the sun in space.
-    attitude_quaternions: :class:`_RawAttituedeQ`
+    attitude_quaternions: :class:`RawAttitudeQ`
         Satellite attitude.
     """
-    centroid_coordinates: _RawEarthLikeCoordinates
-    dscovr_j2000_position: _RawSpatialCoordinates
-    lunar_j2000_position: _RawSpatialCoordinates
-    sun_j2000_position: _RawSpatialCoordinates
-    attitude_quaternions: _RawAttitudeQ
+    centroid_coordinates: RawEarthLikeCoordinates
+    dscovr_j2000_position: RawSpatialCoordinates
+    lunar_j2000_position: RawSpatialCoordinates
+    sun_j2000_position: RawSpatialCoordinates
+    attitude_quaternions: RawAttitudeQ
 
 
 class RawEpicImage(TypedDict):
@@ -113,17 +117,17 @@ class RawEpicImage(TypedDict):
         The date of the image.
     caption: :class:`str`
         The caption of the image.
-    centroid_coordinates: :class:`_RawEarthLikeCoordinates`
+    centroid_coordinates: :class:`RawEarthLikeCoordinates`
         Geographical coordinates that the satellite is looking at.
-    dscovr_j2000_position: :class:`_RawSpatialCoordinates`
+    dscovr_j2000_position: :class:`RawSpatialCoordinates`
         Position of the satellite in space.
-    lunar_j2000_position: :class:`_RawSpatialCoordinates`
+    lunar_j2000_position: :class:`RawSpatialCoordinates`
         Position of the moon in space.
-    sun_j2000_position: :class:`_RawSpatialCoordinates`
+    sun_j2000_position: :class:`RawSpatialCoordinates`
         Position of the sun in space.
-    attitude_quaternions: :class:`_RawAttituedeQ`
+    attitude_quaternions: :class:`RawAttitudeQ`
         Satellite attitude.
-    coords: :class:`_EpicCoordinates`
+    coords: :class:`EpicCoordinates`
         Coordinates linked to the postion of the satellite.
     version: :class:`int`
         The Api version.
@@ -132,12 +136,12 @@ class RawEpicImage(TypedDict):
     image: str
     date: str
     caption: str
-    centroid_coordinates: _RawEarthLikeCoordinates
-    dscovr_j2000_position: _RawSpatialCoordinates
-    lunar_j2000_position: _RawSpatialCoordinates
-    sun_j2000_position: _RawSpatialCoordinates
-    attitude_quaternions: _RawAttitudeQ
-    coords: _EpicCoordinates
+    centroid_coordinates: RawEarthLikeCoordinates
+    dscovr_j2000_position: RawSpatialCoordinates
+    lunar_j2000_position: RawSpatialCoordinates
+    sun_j2000_position: RawSpatialCoordinates
+    attitude_quaternions: RawAttitudeQ
+    coords: EpicCoordinates
     version: str
 
 

@@ -19,7 +19,7 @@ EPIC
 .. autoclass:: RawEpicImage
     :members:
 
-.. autoclass:: nasa._types.epic_image._RawSpatialCoordinates
-.. autoclass:: nasa._types.epic_image._RawEarthLikeCoordinates
-.. autoclass:: nasa._types.epic_image._RawAttitudeQ
-.. autoclass:: nasa._types.epic_image._EpicCoordinates
+.. autoclass:: nasa.RawSpatialCoordinates
+.. autoclass:: nasa.RawEarthLikeCoordinates
+.. autoclass:: nasa.RawAttitudeQ
+.. autoclass:: nasa.EpicCoordinates
