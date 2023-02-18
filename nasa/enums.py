@@ -3,6 +3,8 @@ from enum import Enum
 __all__: tuple[str, ...] = (
     "Endpoints",
     "EpicImageType",
+    "LogLevels",
+    "FileTypes",
 )
 
 class Endpoints(str, Enum):
@@ -21,3 +23,20 @@ class EpicImageType(str, Enum):
     enhanced_date = "enhanced/date"
     enhanced_all = "enhanced/all"
     enhanced_available = "enhanced/available"
+
+
+class FileTypes(str, Enum):
+    png = "png"
+    jpg = "jpg"
+    thumbs = "thumbs"
+
+
+class LogLevels(int, Enum):
+    CRITICAL = 50
+    FATAL = CRITICAL
+    ERROR = 40
+    WARNING = 30
+    WARN = WARNING
+    INFO = 20
+    DEBUG = 10
+    NOTSET = 0

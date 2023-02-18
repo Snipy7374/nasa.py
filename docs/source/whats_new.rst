@@ -1,16 +1,9 @@
-Chanegelog test
+.. currentmodule:: nasa
 
-Chanegelog
+Changelog
 ==========
 
-test
+This page keeps a detailed human friendly rendering of what’s new and changed in specific versions.
 
 .. towncrier release notes start
 
-Nasa 0.0.1a (2023-02-17)
-------------------------
-
-Documentation
-~~~~~~~~~~~~~
-
-- this is a test

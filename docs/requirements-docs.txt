@@ -8,3 +8,6 @@ furo==2022.6.21
 sphinx_copybutton
 sphinx_design
 sphinx_inline_tabs
+sphinxcontrib-towncrier
+sphinx-hoverxref
+sphinxcontrib-trio

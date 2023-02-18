@@ -11,57 +11,82 @@ sphinx-autobuild -a docs/source docs/_build/html --watch nasa
 ```
 
 # Demo
+APOD
 ![image](https://user-images.githubusercontent.com/100313469/207457548-06b74b8d-a95b-46a0-87fd-4a7103a5a2c6.png)
+EPIC
+![epic_1b_20230216000831](https://user-images.githubusercontent.com/100313469/219876782-b8c15cb4-a179-4c1e-be0d-789314fc5a1b.png)
 
-# Installation
+<!-- start quickstart -->
+
+Installation
+============
+
 Currently the package is not available on pypi, this means that you can't install it using just ``pip``.
 To install ``Nasa.py`` you need to install ``git`` and to run this command
-```
-pip install git+https://github.com/Snipy7374/nasa.py
-```
 
-# Requirements
-```
-aiohttp
-aiofiles
-requests
-```
+.. code-block:: text
 
-# Basic usage
+    pip install git+https://github.com/Snipy7374/nasa.py
+
+
+Requirements
+============
+
+.. code-block:: text
+
+    aiohttp
+    aiofiles
+    requests
+
+
+Basic usage
+===========
+
 Create a client object
-```py
-import typing as t
-from nasa import NasaSyncClient
 
-if t.TYPE_CHECKING:
-    from nasa import AstronomyPicture
+.. code-block:: python3
 
-client = NasaSyncClient(token="TOKEN_HERE")
-```
+    import typing as t
+    from nasa import NasaSyncClient
+
+    if t.TYPE_CHECKING:
+        from nasa import AstronomyPicture
+
+    client = NasaSyncClient(token="TOKEN_HERE")
+
 get the todays astronomy picture
-```py
-astronomy_picture: AstronomyPicture = client.get_astronomy_picture()
-```
+
+.. code-block:: python3
+
+    astronomy_picture: AstronomyPicture = client.get_astronomy_picture()
+
+
 save an image
-```py
-astronomy_picture.image.save("image.png")
-```
+
+.. code-block:: python3
+
+    astronomy_picture.image.save("image.png")
+
 
 This library also supports Async requests
-```py
-import typing as t
-from nasa import NasaAsyncClient
 
-if t.TYPE_CHECKING:
-    from nasa import AstronomyPicture
+.. code-block:: python3
 
-client = NasaAsyncClient(token="TOKEN_HERE")
+    import typing as t
+    from nasa import NasaAsyncClient
 
-async def main():
-    async with client:
-        astronomy_picture: AstronomyPicture = await client.get_astronomy_picture()
-        await astronomy_picture.image.save("image.png")
-```
+    if t.TYPE_CHECKING:
+        from nasa import AstronomyPicture
+
+    client = NasaAsyncClient(token="TOKEN_HERE")
+
+    async def main():
+        async with client:
+            astronomy_picture: AstronomyPicture = await client.get_astronomy_picture()
+            await astronomy_picture.image.save("image.png")
+
+
+<!-- end quickstart -->
 
 ---
 # Currently supported NASA API endpoints
@@ -73,7 +98,7 @@ async def main():
 - ~~Solve typing issues with `typing.overload`s on `client.py`~~
 - Support other endpoints
 - ~~Add async client & methods~~
-- Add logging
+- ~~Add logging~~
 - ~~Add docs :)~~
 - Add developing tools
 - Add workflows on github
@@ -81,3 +106,5 @@ async def main():
 - Upload the project on PyPi
 - Customize the docs
 - Add examples
+- docs: improve the structure of payloads and add Dev docs
+- docs: add contributing section

@@ -1,11 +1,9 @@
-.. currentmodule:: nasa
-
 API reference
 -------------
 
 .. toctree::
 
-    astronomy_pictures
-    epic_image
+    apod/index
+    epic/index
     assets
     types/index

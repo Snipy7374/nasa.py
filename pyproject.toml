@@ -27,3 +27,41 @@ reportUnknownArgumentType = false
 reportUnknownMemberType = false
 reportMissingParameterType = false
 reportUnnecessaryIsInstance = false
+
+[tool.towncrier]
+package = "nasa"
+directory = "changelogs/"
+filename = "docs/source/whats_new.rst"
+issue_format = ":issue:`{issue}`"
+underlines = "-~"
+start_string = ".. towncrier release notes start\n"
+
+    [[tool.towncrier.type]]
+    directory = "breaking"
+    name = "Breaking Changes"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "deprecate"
+    name = "Deprecations"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "feature"
+    name = "New Features"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "bugfix"
+    name = "Bug Fixes"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "doc"
+    name = "Documentation"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "misc"
+    name = "Miscellaneous"
+    showcontent = true

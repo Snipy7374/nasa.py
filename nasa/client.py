@@ -5,14 +5,19 @@ from typing import (
     AsyncGenerator,
     Any,
     TYPE_CHECKING,
-    cast
+    cast,
 )
 
 import logging
 from datetime import datetime
 
 from ._http import AsyncHTTPClient, HTTPClient, Route
-from .enums import Endpoints, EpicImageType
+from .enums import (
+    Endpoints,
+    EpicImageType,
+    LogLevels,
+    FileTypes
+)
 from ._types import (
     AstronomyPicture,
     EpicImage,
@@ -30,11 +35,12 @@ if TYPE_CHECKING:
         RawEpicImage,
     )
 
-
 __all__: tuple[str, ...] = (
     "NasaSyncClient",
     "NasaAsyncClient",
 )
+
+_log = logging.getLogger(__name__)
 
 
 class _BaseClient:
@@ -123,6 +129,13 @@ class _BaseClient:
 class NasaSyncClient(_BaseClient):
     """A synchronous client to make request to the NASA Api.
 
+    This class can be used in context managers. See :ref:`NasaSyncClient-example-reference`
+    for more informations.
+
+    .. note::
+        The session linked to this client does not necessarily
+        need to be closed.
+
     .. warning::
         If you're planning to use this library in an asynchronous context
         you should use :class:`NasaAsyncClient`.
@@ -134,12 +147,35 @@ class NasaSyncClient(_BaseClient):
     token: Optional[:class:`str`]
         The token that should be used to connect to the NASA Api.
     """
-    def __init__(self, *, token: str | None,
-        #should_log: bool = False,
-        #logging_level = LogLevels.INFO
+    def __init__(
+        self,
+        *,
+        token: str | None,
+        should_log: bool = False,
+        logging_level: LogLevels = LogLevels.NOTSET
     ) -> None:
         self.__token = token
         self.__http = HTTPClient(token=self.__token)
+        if not isinstance(logging_level, LogLevels):
+            raise ValueError(f"'logging_level' must be an enum member of 'nasa.LogLevels' not {type(logging_level)}")
+        self.logging_level = logging_level
+        if should_log:
+            logging.basicConfig(level=logging_level)
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+    def close(self) -> None:
+        """Closes the :class:`HTTPClient` session.
+        
+        .. caution::
+            An :class:`HTTPClient` session cannot be re-opened.
+        """
+        _log.info("Closing the http client session")
+        self.__http.close()
     
     @property
     def http_client(self) -> HTTPClient:
@@ -334,7 +370,7 @@ class NasaSyncClient(_BaseClient):
     """
 
     @staticmethod
-    def _build_image_url(identifier: str, date: str, image_type: EpicImageType) -> str:
+    def _build_image_url(identifier: str, date: str, image_type: EpicImageType, image_as: str | None) -> tuple[str, str]:
         # todo: make somewhat possible to build different url file types
         #   - png
         #   - jpg
@@ -346,7 +382,14 @@ class NasaSyncClient(_BaseClient):
 
         image_type_ = "natural" if "natural" in image_type else "enhanced"
         prefix = "epic_1b" if image_type_ == "natural" else "epic_RGB"
-        return f"{Endpoints.EPIC_IMG}/archive/{image_type_}/{date}/png/{prefix}_{identifier}.png"
+        url = (
+                f"{Endpoints.EPIC_IMG}/archive/{image_type_}/{date}/"+ (image_as if image_as else "{}") +
+                f"/{prefix}_{identifier}." + (image_as if image_as else "{}")
+            )
+        return (
+            url,
+            "partial"
+        )
 
     def _epic_impl(self, method: str, endpoint: str, **kwargs) -> list[RawEpicImage]:
         if not kwargs.get("date"):
@@ -361,7 +404,8 @@ class NasaSyncClient(_BaseClient):
         self,
         date: datetime | None = None,
         *,
-        image_type: EpicImageType = EpicImageType.natural
+        image_type: EpicImageType = EpicImageType.natural,
+        image_as: FileTypes | None = None
     ) -> list[EpicImage]:
         """Fetch earth images from the EPIC endpoint.
 
@@ -374,6 +418,8 @@ class NasaSyncClient(_BaseClient):
             by the Nasa API.
         image_type: :class:`EpicImageType`
             Defaults to :attr:`EpicImageType.natural`.
+        image_as: Optional[:class:`FileTypes`]
+            The file extension of the image. This can be a png, a jpg or a thumbs.
         
         Returns
         -------
@@ -389,12 +435,15 @@ class NasaSyncClient(_BaseClient):
                 identifier=epic.get("identifier"),
                 image_name=epic["image"],
                 image=SyncAsset(
-                    url=self._build_image_url(
-                        identifier=epic.get("identifier"),
-                        date=epic["date"],
-                        image_type=image_type
-                    ),
-                    http_client=self.__http
+                    url=(_u := self._build_image_url(
+                            identifier=epic.get("identifier"),
+                            date=epic["date"],
+                            image_type=image_type,
+                            image_as=image_as,
+                        )
+                    )[0],
+                    http_client=self.__http,
+                    url_state=_u[1]
                 ),
                 date=epic["date"],
                 caption=epic["caption"],
@@ -433,9 +482,11 @@ class NasaAsyncClient(_BaseClient):
                     image = await client.get_astronomy_picture()
         
         This will handle automatically the :class:`HTTPClient` closure.
-    
-    .. seealso::
-        To manually close the session use :func:`close`.
+        For more information see :ref:`NasaAsyncClient-example-reference`
+
+    .. warning::
+        You need to manually close the session linked to the this
+        client using :func:`close`.
 
     .. versionadded:: 0.0.1
 
@@ -444,9 +495,20 @@ class NasaAsyncClient(_BaseClient):
     token: Optional[:class:`str`]
         The token that should be used to connect to the NASA Api.
     """
-    def __init__(self, *, token: str | None) -> None:
+    def __init__(
+        self,
+        *,
+        token: str | None,
+        should_log: bool = False,
+        logging_level: LogLevels = LogLevels.NOTSET
+    ) -> None:
         self.__token = token
         self.__http = AsyncHTTPClient(token=self.__token)
+        if not isinstance(logging_level, LogLevels):
+            raise ValueError(f"'logging_level' must be an enum member of 'nasa.LogLevels' not {type(logging_level)}")
+        self.logging_level = logging_level
+        if should_log:
+            logging.basicConfig(level=logging_level)
     
     async def __aenter__(self):
         return self
@@ -460,6 +522,7 @@ class NasaAsyncClient(_BaseClient):
         .. caution::
             An :class:`HTTPClient` session cannot be re-opened.
         """
+        _log.info("Closing the http client session")
         await self.__http.close()
     
     @property

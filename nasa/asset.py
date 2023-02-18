@@ -4,8 +4,11 @@ from typing_extensions import TypeAlias
 
 import os
 import io
+import logging
 
 import aiofiles
+
+from .enums import FileTypes
 
 if TYPE_CHECKING:
     from ._http import HTTPClient, AsyncHTTPClient
@@ -14,6 +17,8 @@ __all__: tuple[str, ...] = (
     "AsyncAsset",
     "SyncAsset",
 )
+
+_log = logging.getLogger(__name__)
 
 # recreating the returned type of the file.name property of aiofiles
 # bad typing on their end
@@ -58,9 +63,10 @@ class AsyncAsset(_BaseAsset):
 
     .. versionadded:: 0.0.1
     """
-    def __init__(self, url: str, http_client: AsyncHTTPClient) -> None:
+    def __init__(self, url: str, http_client: AsyncHTTPClient, url_state: str) -> None:
         self._url = url
         self.__http = http_client
+        self.__url_state = url_state
 
     def __eq__(self, __o: object) -> bool:
         return isinstance(__o, AsyncAsset) and self._url == __o.url
@@ -80,6 +86,7 @@ class AsyncAsset(_BaseAsset):
         :class:`bytes`
             The ``bytes`` of the file.
         """
+        _log.info("Getting bytes of %s", self._url)
         self._bytes = await self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
@@ -149,7 +156,9 @@ class AsyncAsset(_BaseAsset):
         else:
             async with aiofiles.open(file, "wb") as f:
                 await f.write(content)
+            _log.info("Asset was saved at %s", f.name)
             return f.name
+
 
 class SyncAsset(_BaseAsset):
     """Represents an asset returned by the NASA Api as a python object.
@@ -168,9 +177,10 @@ class SyncAsset(_BaseAsset):
 
     .. versionadded:: 0.0.1
     """
-    def __init__(self, url: str, http_client: HTTPClient) -> None:
+    def __init__(self, url: str, http_client: HTTPClient, url_state: str) -> None:
         self._url = url
         self.__http = http_client
+        self.__url_state = url_state
 
     def __eq__(self, __o: object) -> bool:
         return isinstance(__o, SyncAsset) and self._url == __o.url
@@ -178,7 +188,7 @@ class SyncAsset(_BaseAsset):
     def __repr__(self) -> str:
         return f"SyncAsset(url={self._url!r})"
 
-    def read(self) -> bytes:
+    def read(self, asset_as = None) -> bytes:
         """Fetch the file and return its bytes.
         
         .. note::
@@ -190,6 +200,11 @@ class SyncAsset(_BaseAsset):
         :class:`bytes`
             The ``bytes`` of the file.
         """
+        _log.info("Getting bytes of %s", self._url)
+        if self.__url_state == "partial":
+            if not isinstance(asset_as, FileTypes):
+                raise ValueError
+            self._url = self._url.format(asset_as, asset_as)
         self._bytes = self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
@@ -255,4 +270,5 @@ class SyncAsset(_BaseAsset):
         else:
             with open(file, "wb") as f:
                 f.write(content)
+            _log.info("Asset was saved at %s", f.name)
             return f.name

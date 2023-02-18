@@ -8,9 +8,10 @@ Welcome to nasa.py's documentation!
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents
 
+   quickstart
    clients/index
    api_reference/index
+   whats_new
    dev/index
    todo

@@ -100,10 +100,10 @@ class AstronomyPicture:
                 .. code-block:: python3
 
                     client = NasaAsyncClient(token="...")
-                    image: AstronomyPicture = await client.get_astronomy_picture()
+                    apod_obj: AstronomyPicture = await client.get_astronomy_picture()
                     # this will save the image with the "title" as
                     # its name
-                    await image.save(image.title)
+                    await apod_obj.image.save(apod_obj.title)
         
         .. tab:: Fetch bytes of an asset
 

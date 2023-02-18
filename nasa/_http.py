@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import ClassVar, Any
 
+import logging
 import requests
 import sys
 import asyncio
@@ -8,6 +9,8 @@ from asyncio import AbstractEventLoop
 
 import aiohttp
 from aiohttp.client_exceptions import ContentTypeError
+
+_log = logging.getLogger(__name__)
 
 
 class Route:
@@ -21,12 +24,24 @@ class Route:
 
 class _BaseHTTPClient:
     """The base HTTPClient."""
-    _user_agent: str = f"Nasa.py 0.0.1a (GitHub here) Python/{sys.version_info[0]}.{sys.version_info[1]} requests/{requests.__version__}"
+    _user_agent: str = f"Nasa.py 0.0.1a (GitHub here) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__} requests/{requests.__version__}"
 
 
 class HTTPClient(_BaseHTTPClient):
     def __init__(self, *, token: str | None = None) -> None:
         self.__token = token
+        self._session = requests.session()
+        self._closed: bool = False
+    
+    @property
+    def is_closed(self) -> bool:
+        return self._closed
+
+    def close(self) -> None:
+        """Closes the requests session."""
+        self._session.close()
+        self._closed = True
+        _log.info("Http client session closed")
 
     def request(
         self,
@@ -41,17 +56,20 @@ class HTTPClient(_BaseHTTPClient):
             raise # add token exception here
 
         params["api_key"] = self.__token
-        response = requests.request(method=route.method, headers=headers, params=params, url=route.url)
+        response = self._session.request(method=route.method, headers=headers, params=params, url=route.url)
 
         try:
+            _log.debug("[%s] from %s %s", response.status_code, route.path, response.text)
             return response.json()
         except:
+            _log.error("[%s] from %s %s", response.status_code, route.path, response.text)
             return response
     
     @staticmethod
     def get_image_as_bytes(url: str) -> bytes:
         if not url:
             return b""
+        _log.info("Getting %s bytes", url)
         return (requests.request(method="GET", url=url)).content
         
 
@@ -71,6 +89,15 @@ class AsyncHTTPClient(_BaseHTTPClient):
     def is_closed(self) -> bool:
         return self._session.closed
 
+    async def close(self) -> None:
+        """Closes the aiohttp.ClientSession session"""
+        #self._loop.create_task(self._session.close(), name="Session closer")
+        # i should close the session only when there's an exception
+        # or when there's a keyboard interrupt also if the session obj was provided by the user i should not close it
+        # the user should handle it himself (i'll provide a method called close() to close a session)
+        await self._session.close()
+        _log.info("Http client session closed")
+
     async def request(
         self,
         *,
@@ -88,23 +115,16 @@ class AsyncHTTPClient(_BaseHTTPClient):
         async with self._session.request(route.method, route.url, params=params, ssl=False, headers=headers) as resp:
             try:
                 content = await resp.json()
+                _log.debug("[%s] from %s %s", resp.status, route.path, content)
             except ContentTypeError:
                 content = await resp.text()
+                _log.error("[%s] from %s %s", resp.status, route.path, content)
             return content
-
-
-
-        #self._loop.create_task(self._session.close(), name="Session closer") #i should close the session only when there's an exception
-        # or when there's a keyboard interrupt also if the session obj was provided by the user i should not close it
-        # the user should handle it himself (i'll provide a method called close() to close a session)
-
-    async def close(self) -> None:
-        """Closes the aiohttp.ClientSession session"""
-        await self._session.close()
 
     @staticmethod
     async def get_image_as_bytes(url: str) -> bytes:
         if not url:
             return b""
         async with aiohttp.request("GET", url=url) as resp:
+            _log.info("Getting %s bytes", url)
             return await resp.read()
