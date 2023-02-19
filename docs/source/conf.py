@@ -68,6 +68,8 @@ source_suffix = {
 }
 master_doc = "index"
 
+towncrier_draft_include_empty = False
+towncrier_draft_working_directory = "../../"
 
 # https://sphinx-hoverxref.readthedocs.io/en/latest/index.html
 hoverxref_auto_ref = True
