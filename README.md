@@ -7,7 +7,7 @@ Work in progress
 
 to run the docs use 
 ```
-sphinx-autobuild -a docs/source docs/_build/html --watch nasa
+sphinx-autobuild -a docs/source docs/_build/html --watch nasa --open-browser
 ```
 
 # Demo

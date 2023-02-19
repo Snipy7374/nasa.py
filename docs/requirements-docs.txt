@@ -4,7 +4,7 @@ typing_extensions
 
 sphinx==5.1.1
 furo==2022.6.21
-
+sphinx-autobuild
 sphinx_copybutton
 sphinx_design
 sphinx_inline_tabs

@@ -123,6 +123,19 @@ class _BaseClient:
             if isinstance(end_date, datetime):
                 end_date = datetime.strftime(end_date, "%Y-%m-%d")
         return (start_date, end_date)
+    
+    @staticmethod
+    def _epic_url_image_builder(identifier: str, date: str, image_type: EpicImageType, image_as: str | None) -> tuple[str, str]:
+        date = '/'.join(((date.split()[0]).split('-')))
+        # split the date as %Y/%m/%d without converting it as datetime object
+
+        image_type_ = "natural" if "natural" in image_type else "enhanced"
+        prefix = "epic_1b" if image_type_ == "natural" else "epic_RGB"
+        url = (
+                f"{Endpoints.EPIC_IMG}/archive/{image_type_}/{date}/"+ (image_as if image_as else "{}") +
+                f"/{prefix}_{identifier}." + (image_as if image_as else "{}")
+            )
+        return (url, "partial")
 
 
 
@@ -234,7 +247,11 @@ class NasaSyncClient(_BaseClient):
             service_version=response["service_version"],
             title=response["title"],
             url=response["url"],
-            image=SyncAsset(response.get("url"), self.__http)
+            image=SyncAsset(
+                response.get("url"),
+                self.__http,
+                "full"
+            )
         )
 
     def _get_multi_astronomy_pictures_impl(self, start_date: datetime | str, end_date: datetime | str | None = None) -> list[RawAstronomyPicture]:
@@ -271,7 +288,11 @@ class NasaSyncClient(_BaseClient):
                 service_version=img_metadata["service_version"],
                 title=img_metadata["title"],
                 url=img_metadata["url"],
-                image=SyncAsset(img_metadata.get("url"), self.__http)
+                image=SyncAsset(
+                    img_metadata.get("url"),
+                    self.__http,
+                    "full",
+                )
             )
             for img_metadata in response
         ]
@@ -304,7 +325,11 @@ class NasaSyncClient(_BaseClient):
                 service_version=img_metadata["service_version"],
                 title=img_metadata["title"],
                 url=img_metadata["url"],
-                image=SyncAsset(img_metadata.get("url"), self.__http)
+                image=SyncAsset(
+                    img_metadata.get("url"),
+                    self.__http,
+                    "full",
+                )
             )
     
     def get_rand_astronomy_pictures(self, count: int = 1) -> list[AstronomyPicture]:
@@ -338,7 +363,10 @@ class NasaSyncClient(_BaseClient):
                 service_version=img_metadata["service_version"],
                 title=img_metadata["title"],
                 url=img_metadata["url"],
-                image=SyncAsset(img_metadata.get("url"), self.__http
+                image=SyncAsset(
+                    img_metadata.get("url"),
+                    self.__http,
+                    "full",
                 )
             )
             for img_metadata in response
@@ -368,28 +396,6 @@ class NasaSyncClient(_BaseClient):
         
         return self._http.request(route=Route("GET", Endpoints.NEOWS + "neo/"), params={})
     """
-
-    @staticmethod
-    def _build_image_url(identifier: str, date: str, image_type: EpicImageType, image_as: str | None) -> tuple[str, str]:
-        # todo: make somewhat possible to build different url file types
-        #   - png
-        #   - jpg
-        #   - thumbs
-        # maybe setattr new attrs on the Asset?
-
-        date = '/'.join(((date.split()[0]).split('-')))
-        # split the date as %Y/%m/%d without converting it as datetime object
-
-        image_type_ = "natural" if "natural" in image_type else "enhanced"
-        prefix = "epic_1b" if image_type_ == "natural" else "epic_RGB"
-        url = (
-                f"{Endpoints.EPIC_IMG}/archive/{image_type_}/{date}/"+ (image_as if image_as else "{}") +
-                f"/{prefix}_{identifier}." + (image_as if image_as else "{}")
-            )
-        return (
-            url,
-            "partial"
-        )
 
     def _epic_impl(self, method: str, endpoint: str, **kwargs) -> list[RawEpicImage]:
         if not kwargs.get("date"):
@@ -435,7 +441,7 @@ class NasaSyncClient(_BaseClient):
                 identifier=epic.get("identifier"),
                 image_name=epic["image"],
                 image=SyncAsset(
-                    url=(_u := self._build_image_url(
+                    url=(_u := self._epic_url_image_builder(
                             identifier=epic.get("identifier"),
                             date=epic["date"],
                             image_type=image_type,
@@ -613,7 +619,11 @@ class NasaAsyncClient(_BaseClient):
                 service_version=img_metadata["service_version"],
                 title=img_metadata["title"],
                 url=img_metadata["url"],
-                image=AsyncAsset(img_metadata.get("url"), self.__http)
+                image=AsyncAsset(
+                    img_metadata.get("url"),
+                    self.__http,
+                    "full"
+                )
             )
             for img_metadata in response
         ]
@@ -646,7 +656,11 @@ class NasaAsyncClient(_BaseClient):
                 service_version=img_metadata["service_version"],
                 title=img_metadata["title"],
                 url=img_metadata["url"],
-                image=AsyncAsset(img_metadata.get("url"), self.__http)
+                image=AsyncAsset(
+                    img_metadata.get("url"),
+                    self.__http,
+                    "full",
+                )
             )
     
     async def get_rand_astronomy_pictures(self, count: int = 1) -> list[AstronomyPicture]:
@@ -680,7 +694,85 @@ class NasaAsyncClient(_BaseClient):
                 service_version=img_metadata["service_version"],
                 title=img_metadata["title"],
                 url=img_metadata["url"],
-                image=AsyncAsset(img_metadata.get("url"), self.__http)
+                image=AsyncAsset(
+                    img_metadata.get("url"),
+                    self.__http,
+                    "full",
+                )
             )
             for img_metadata in response
+        ]
+    
+    async def _epic_impl(self, method: str, endpoint: str, **kwargs) -> list[RawEpicImage]:
+        if not kwargs.get("date"):
+            del kwargs["date"]
+        
+        # i need to url encode things
+        if kwargs.get("date"):
+            endpoint += f"/{kwargs.get('date')}"
+        return await self.__http.request(route=Route(method, endpoint))
+    
+    async def get_epic_images(
+        self,
+        date: datetime | None = None,
+        *,
+        image_type: EpicImageType = EpicImageType.natural,
+        image_as: FileTypes | None = None
+    ) -> list[EpicImage]:
+        """Fetch earth images from the EPIC endpoint.
+
+        .. versionadded:: 0.0.1 
+
+        Parameters
+        ----------
+        date: Optional[:class:`datetime.datetime`]
+            If not provided fetchs the default :class:`EpicImage`\s returned
+            by the Nasa API.
+        image_type: :class:`EpicImageType`
+            Defaults to :attr:`EpicImageType.natural`.
+        image_as: Optional[:class:`FileTypes`]
+            The file extension of the image. This can be a png, a jpg or a thumbs.
+        
+        Returns
+        -------
+        list[:class:`EpicImage`] Returns the requested epic images.
+        """
+        date_ = self._date_to_str(datetime.now())
+        if date:
+            date_ = self._date_to_str(date)
+
+        response = await self._epic_impl(method="GET", endpoint=Endpoints.EPIC + image_type, date=date_)
+        return [
+            EpicImage(
+                identifier=epic.get("identifier"),
+                image_name=epic["image"],
+                image=AsyncAsset(
+                    url=(_u := self._epic_url_image_builder(
+                            identifier=epic.get("identifier"),
+                            date=epic["date"],
+                            image_type=image_type,
+                            image_as=image_as,
+                        )
+                    )[0],
+                    http_client=self.__http,
+                    url_state=_u[1]
+                ),
+                date=epic["date"],
+                caption=epic["caption"],
+                centroid_coordinates=EarthLikeCoordinates(**epic["centroid_coordinates"]),
+                dscovr_j2000_position=SpatialCoordinates(**epic["dscovr_j2000_position"]),
+                lunar_j2000_position=SpatialCoordinates(**epic["lunar_j2000_position"]),
+                sun_j2000_position=SpatialCoordinates(**epic["sun_j2000_position"]),
+                attitude_quaternions=AttitudeQuaternions(**epic["attitude_quaternions"]),
+                coords=Coordinates(
+                    centroid_coordinates=EarthLikeCoordinates(**epic["coords"]["centroid_coordinates"]),
+                    dscovr_j2000_position=SpatialCoordinates(**epic["coords"]["dscovr_j2000_position"]),
+                    lunar_j2000_position=SpatialCoordinates(**epic["coords"]["lunar_j2000_position"]),
+                    sun_j2000_position=SpatialCoordinates(**epic["coords"]["sun_j2000_position"]),
+                    attitude_quaternions=AttitudeQuaternions(**epic["coords"]["attitude_quaternions"])
+                ),
+                version=epic["version"],
+                image_type=image_type
+            ) 
+            for epic in response
         ]

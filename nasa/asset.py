@@ -74,7 +74,7 @@ class AsyncAsset(_BaseAsset):
     def __repr__(self) -> str:
         return f"AsyncAsset(url={self._url!r})"
 
-    async def read(self) -> bytes:
+    async def read(self, asset_as: FileTypes | None = None) -> bytes:
         """Fetch the file and return its bytes.
         
         .. note::
@@ -87,6 +87,10 @@ class AsyncAsset(_BaseAsset):
             The ``bytes`` of the file.
         """
         _log.info("Getting bytes of %s", self._url)
+        if self.__url_state == "partial":
+            if not isinstance(asset_as, FileTypes):
+                raise ValueError(f"'asset_as' must be a FileTypes member not {asset_as.__class__!r}")
+            self._url = self._url.format(asset_as.value, asset_as.value)
         self._bytes = await self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
@@ -188,7 +192,7 @@ class SyncAsset(_BaseAsset):
     def __repr__(self) -> str:
         return f"SyncAsset(url={self._url!r})"
 
-    def read(self, asset_as = None) -> bytes:
+    def read(self, asset_as: FileTypes | None = None) -> bytes:
         """Fetch the file and return its bytes.
         
         .. note::
@@ -203,8 +207,8 @@ class SyncAsset(_BaseAsset):
         _log.info("Getting bytes of %s", self._url)
         if self.__url_state == "partial":
             if not isinstance(asset_as, FileTypes):
-                raise ValueError
-            self._url = self._url.format(asset_as, asset_as)
+                raise ValueError(f"'asset_as' must be a FileTypes member not {asset_as.__class__!r}")
+            self._url = self._url.format(asset_as.value, asset_as.value)
         self._bytes = self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
