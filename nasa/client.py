@@ -15,6 +15,7 @@ from ._http import AsyncHTTPClient, HTTPClient, Route
 from .enums import (
     Endpoints,
     EpicImageType,
+    _EpicImageFlags,  # type: ignore
     LogLevels,
     FileTypes
 )
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
     from ._types import (
         RawAstronomyPicture,
         RawEpicImage,
+        AvailableDates,
     )
 
 __all__: tuple[str, ...] = (
@@ -79,7 +81,7 @@ class _BaseClient:
             raise ValueError("'date' parameter must follow the 'YYYY-mm-dd' date format")
 
     @staticmethod
-    def _date_to_str(date: datetime) -> str:
+    def _date_to_str(date: datetime, separator: str = "-") -> str:
         """Convert a datetime object into a string.
         
         Parameters
@@ -94,7 +96,7 @@ class _BaseClient:
         """
         # i need this method since the API expects dates
         # with the format YYYY-mm-dd
-        return datetime.strftime(date, "%Y-%m-%d")
+        return datetime.strftime(date, f"%Y{separator}%m{separator}%d")
     
     def _date_validator(self, start_date: datetime | str, end_date: datetime | str | None) -> tuple[str, str | None]:
         """
@@ -397,7 +399,16 @@ class NasaSyncClient(_BaseClient):
         return self._http.request(route=Route("GET", Endpoints.NEOWS + "neo/"), params={})
     """
 
-    def _epic_impl(self, method: str, endpoint: str, **kwargs) -> list[RawEpicImage]:
+    @overload
+    def _epic_impl(self, method: str, endpoint: str, image_type: _EpicImageFlags, **kwargs) -> list[str]:
+        ...
+    
+    @overload
+    def _epic_impl(self, method: str, endpoint: str, image_type: EpicImageType, **kwargs) -> list[RawEpicImage]:
+        ...
+
+    def _epic_impl(self, method: str, endpoint: str, image_type: EpicImageType | _EpicImageFlags, **kwargs) -> list[str] | list[RawEpicImage]:
+        endpoint += image_type 
         if not kwargs.get("date"):
             del kwargs["date"]
         
@@ -405,6 +416,60 @@ class NasaSyncClient(_BaseClient):
         if kwargs.get("date"):
             endpoint += f"/{kwargs.get('date')}"
         return self.__http.request(route=Route(method, endpoint))
+    
+    def get_epic_natural_available_dates(self) -> AvailableDates:
+        """Get all the natural available dates.
+
+        You can use this to check if a request with a given date will return
+        something or not.
+
+        .. note::
+            The dates are not converted to :class:`datetime.datetime` objects to save
+            time and memory.
+
+        .. seealso::
+            :func:`get_epic_enhanced_available_dates`
+
+        .. versionadded:: 0.0.1
+
+        Returns
+        -------
+        :class:`AvailableDates` a dict containing all the natural available dates as single list.
+        """
+        return {"available_dates": self._epic_impl(
+                    method="GET",
+                    endpoint=Endpoints.EPIC,
+                    image_type=_EpicImageFlags.natural_available,
+                    date=None,
+                )
+        }
+    
+    def get_epic_enhanced_available_dates(self) -> AvailableDates:
+        """Get all the enhanced available dates.
+
+        You can use this to check if a request with a given date will return
+        something or not.
+
+        .. note::
+            The dates are not converted to :class:`datetime.datetime` objects to save
+            time and memory.
+
+        .. seealso::
+            :func:`get_epic_natural_available_dates`
+
+        .. versionadded:: 0.0.1
+
+        Returns
+        -------
+        :class:`AvailableDates` a dict containing all the enhanced available dates as single list.
+        """
+        return {"available_dates": self._epic_impl(
+                    method="GET",
+                    endpoint=Endpoints.EPIC,
+                    image_type=_EpicImageFlags.enhanced_available,
+                    date=None,
+                )
+        }
     
     def get_epic_images(
         self,
@@ -427,15 +492,34 @@ class NasaSyncClient(_BaseClient):
         image_as: Optional[:class:`FileTypes`]
             The file extension of the image. This can be a png, a jpg or a thumbs.
         
+        Raises
+        ------
+        ValueError
+            An invalid "image_type" was passed. This needs to be a :class:`EpicImageType`
+            member.
+
         Returns
         -------
         list[:class:`EpicImage`] Returns the requested epic images.
         """
-        date_ = self._date_to_str(datetime.now())
+        if not isinstance(image_type, EpicImageType):
+            raise ValueError(f"'image_type' must be a member of 'EpicImageType', not {image_type.__class__!r}")
         if date:
             date_ = self._date_to_str(date)
+        elif date is None and image_type is EpicImageType.natural_date:
+            todays_date = datetime.now()
+            date_ = self._date_to_str(date=datetime(
+                    year=todays_date.year,
+                    month=todays_date.month,
+                    day=(todays_date.day - 4),
+                ),
+            )
+        else:
+            date_ = None
 
-        response = self._epic_impl(method="GET", endpoint=Endpoints.EPIC + image_type, date=date_)
+        response = self._epic_impl(method="GET", endpoint=Endpoints.EPIC, image_type=image_type, date=date_)  # type: ignore
+
+        response: list[RawEpicImage]
         return [
             EpicImage(
                 identifier=epic.get("identifier"),
@@ -702,8 +786,17 @@ class NasaAsyncClient(_BaseClient):
             )
             for img_metadata in response
         ]
+
+    @overload
+    async def _epic_impl(self, method: str, endpoint: str, image_type: _EpicImageFlags, **kwargs) -> list[str]:
+        ...
     
-    async def _epic_impl(self, method: str, endpoint: str, **kwargs) -> list[RawEpicImage]:
+    @overload
+    async def _epic_impl(self, method: str, endpoint: str, image_type: EpicImageType, **kwargs) -> list[RawEpicImage]:
+        ...
+
+    async def _epic_impl(self, method: str, endpoint: str, image_type: EpicImageType | _EpicImageFlags, **kwargs) -> list[str] | list[RawEpicImage]:
+        endpoint += image_type 
         if not kwargs.get("date"):
             del kwargs["date"]
         
@@ -711,6 +804,60 @@ class NasaAsyncClient(_BaseClient):
         if kwargs.get("date"):
             endpoint += f"/{kwargs.get('date')}"
         return await self.__http.request(route=Route(method, endpoint))
+    
+    async def get_epic_natural_available_dates(self) -> AvailableDates:
+        """Get all the natural available dates.
+
+        You can use this to check if a request with a given date will return
+        something or not.
+
+        .. note::
+            The dates are not converted to :class:`datetime.datetime` objects to save
+            time and memory.
+
+        .. seealso::
+            :func:`get_epic_enhanced_available_dates`
+
+        .. versionadded:: 0.0.1
+
+        Returns
+        -------
+        :class:`AvailableDates` a dict containing all the natural available dates as single list.
+        """
+        return {"available_dates": await self._epic_impl(
+                    method="GET",
+                    endpoint=Endpoints.EPIC,
+                    image_type=_EpicImageFlags.natural_available,
+                    date=None,
+                )
+        }
+    
+    async def get_epic_enhanced_available_dates(self) -> AvailableDates:
+        """Get all the enhanced available dates.
+
+        You can use this to check if a request with a given date will return
+        something or not.
+
+        .. note::
+            The dates are not converted to :class:`datetime.datetime` objects to save
+            time and memory.
+
+        .. seealso::
+            :func:`get_epic_natural_available_dates`
+
+        .. versionadded:: 0.0.1
+
+        Returns
+        -------
+        :class:`AvailableDates` a dict containing all the enhanced available dates as single list.
+        """
+        return {"available_dates": await self._epic_impl(
+                    method="GET",
+                    endpoint=Endpoints.EPIC,
+                    image_type=_EpicImageFlags.enhanced_available,
+                    date=None,
+                )
+        }
     
     async def get_epic_images(
         self,
@@ -733,15 +880,34 @@ class NasaAsyncClient(_BaseClient):
         image_as: Optional[:class:`FileTypes`]
             The file extension of the image. This can be a png, a jpg or a thumbs.
         
+        Raises
+        ------
+        ValueError
+            An invalid "image_type" was passed. This needs to be a :class:`EpicImageType`
+            member.
+
         Returns
         -------
         list[:class:`EpicImage`] Returns the requested epic images.
         """
-        date_ = self._date_to_str(datetime.now())
+        if not isinstance(image_type, EpicImageType):
+            raise ValueError(f"'image_type' must be a member of 'EpicImageType', not {image_type.__class__!r}")
         if date:
             date_ = self._date_to_str(date)
+        elif date is None and image_type is EpicImageType.natural_date:
+            todays_date = datetime.now()
+            date_ = self._date_to_str(date=datetime(
+                    year=todays_date.year,
+                    month=todays_date.month,
+                    day=(todays_date.day - 4),
+                ),
+            )
+        else:
+            date_ = None
 
-        response = await self._epic_impl(method="GET", endpoint=Endpoints.EPIC + image_type, date=date_)
+        response = await self._epic_impl(method="GET", endpoint=Endpoints.EPIC, image_type=image_type, date=date_)  # type: ignore
+
+        response: list[RawEpicImage]
         return [
             EpicImage(
                 identifier=epic.get("identifier"),

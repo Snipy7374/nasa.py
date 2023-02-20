@@ -81,6 +81,18 @@ class AsyncAsset(_BaseAsset):
             This function doesn't use the token. As a result requests
             made with this method won't reduce your request counter.
 
+        Parameters
+        ----------
+        asset_as: Optional[:class:`FileTypes`]
+            If given and the :attr:`url` is partial it will build a url with
+            thay specific file extension. The returned file reflect the file extension
+            where possible. If given and :attr:`url` isn't partial then its ignored.
+        
+        Raises
+        ------
+        ValueError
+            ``asset_as`` was not a :class:`FileTypes` member.
+
         Returns
         -------
         :class:`bytes`
@@ -88,9 +100,11 @@ class AsyncAsset(_BaseAsset):
         """
         _log.info("Getting bytes of %s", self._url)
         if self.__url_state == "partial":
+            _log.info("asset's url is partial - building complete url")
             if not isinstance(asset_as, FileTypes):
                 raise ValueError(f"'asset_as' must be a FileTypes member not {asset_as.__class__!r}")
             self._url = self._url.format(asset_as.value, asset_as.value)
+            _log.info("url builded - %s", self._url)
         self._bytes = await self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
@@ -151,7 +165,7 @@ class AsyncAsset(_BaseAsset):
             If ``file`` is :class:`io.BufferedIOBase` the number of bytes written; otherwise
             the name of the file or the path where it was saved.
         """
-        content = self._bytes if self._bytes else await self.read()
+        content = self._bytes if self._bytes else await self.read(asset_as=FileTypes.png)
         if isinstance(file, io.BufferedIOBase):
             written = file.write(content)
             if seek_at_end:
@@ -198,6 +212,18 @@ class SyncAsset(_BaseAsset):
         .. note::
             This function doesn't use the token. As a result requests
             made with this method won't reduce your request counter.
+        
+        Parameters
+        ----------
+        asset_as: Optional[:class:`FileTypes`]
+            If given and the :attr:`url` is partial it will build a url with
+            thay specific file extension. The returned file reflect the file extension
+            where possible. If given and :attr:`url` isn't partial then its ignored.
+        
+        Raises
+        ------
+        ValueError
+            ``asset_as`` was not a :class:`FileTypes` member.
 
         Returns
         -------
@@ -206,9 +232,11 @@ class SyncAsset(_BaseAsset):
         """
         _log.info("Getting bytes of %s", self._url)
         if self.__url_state == "partial":
+            _log.info("asset's url is partial - building complete url")
             if not isinstance(asset_as, FileTypes):
                 raise ValueError(f"'asset_as' must be a FileTypes member not {asset_as.__class__!r}")
             self._url = self._url.format(asset_as.value, asset_as.value)
+            _log.info("url builded - %s", self._url)
         self._bytes = self.__http.get_image_as_bytes(self._url)
         return self._bytes
     
@@ -265,7 +293,7 @@ class SyncAsset(_BaseAsset):
             If ``file`` is :class:`io.BufferedIOBase` the number of bytes written; otherwise
             the name of the file or the path where it was saved.
         """
-        content = self._bytes if self._bytes else self.read()
+        content = self._bytes if self._bytes else self.read(asset_as=FileTypes.png)
         if isinstance(file, io.BufferedIOBase):
             written = file.write(content)
             if seek_at_end:

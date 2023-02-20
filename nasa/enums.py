@@ -3,6 +3,7 @@ from enum import Enum
 __all__: tuple[str, ...] = (
     "Endpoints",
     "EpicImageType",
+    "_EpicImageFlags",
     "LogLevels",
     "FileTypes",
 )
@@ -17,12 +18,18 @@ class Endpoints(str, Enum):
 class EpicImageType(str, Enum):
     natural = "natural"
     natural_date = "natural/date"
-    natural_all = "natural/all"
-    natural_available = "natural/available"
     enhanced = "enhanced"
     enhanced_date = "enhanced/date"
-    enhanced_all = "enhanced/all"
+
+
+class _EpicImageFlags(str, Enum):
+    # X_all aren't used by the library
+    # because its convenient to use X_available
+    # they both returns the same content 
+    natural_all = "natural/all"
+    natural_available = "natural/available"
     enhanced_available = "enhanced/available"
+    enhanced_all = "enhanced/all"
 
 
 class FileTypes(str, Enum):

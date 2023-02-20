@@ -1,6 +1,3 @@
-import sys
-import os
-
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -8,7 +5,6 @@ import os
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-sys.path.insert(0, os.path.abspath("../../"))
 import nasa
 
 project = nasa.__name__
@@ -69,7 +65,7 @@ source_suffix = {
 master_doc = "index"
 
 towncrier_draft_include_empty = False
-towncrier_draft_working_directory = "../../"
+towncrier_draft_working_directory = "."
 
 # https://sphinx-hoverxref.readthedocs.io/en/latest/index.html
 hoverxref_auto_ref = True

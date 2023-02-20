@@ -1,5 +1,5 @@
 [project]
-name = "Nasa.py"
+name = "nasasync"
 description = "A python API wrapper for the NASA API"
 readme = "README.md"
 authors = [
@@ -7,16 +7,41 @@ authors = [
 ]
 requires-python = ">=3.10"
 keywords = ["Nasa", "Nasa.py", "Nasa API"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
 license = {text = "MIT"}
-dynamic = ["version", "dependencies"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+
+[project.urls]
+"documentation" = "https://nasapy-a-nasa-api-python-wrapper.readthedocs.io/en/latest/index.html"
+"changelog" = "https://nasapy-a-nasa-api-python-wrapper.readthedocs.io/en/beta/whats_new.html"
+"repository" = "https://github.com/Snipy7374/nasa.py"
+
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
+
+[tool.setuptools]
+packages = ["nasa"]
+
+
 [tool.setuptools.dynamic]
 version = {attr = "nasa.__version__"}
 dependencies = {file = ["requirements.txt"]}
+
 
 [tool.pyright]
 typeCheckingMode = "strict"
@@ -27,6 +52,7 @@ reportUnknownArgumentType = false
 reportUnknownMemberType = false
 reportMissingParameterType = false
 reportUnnecessaryIsInstance = false
+
 
 [tool.towncrier]
 package = "nasa"

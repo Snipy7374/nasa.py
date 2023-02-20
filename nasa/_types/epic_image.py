@@ -20,6 +20,7 @@ __all__: tuple[str, ...] = (
     "AttitudeQuaternions",
     "Coordinates",
     "EpicImage",
+    "AvailableDates",
 )
 
 
@@ -100,6 +101,10 @@ class EpicCoordinates(TypedDict):
     lunar_j2000_position: RawSpatialCoordinates
     sun_j2000_position: RawSpatialCoordinates
     attitude_quaternions: RawAttitudeQ
+
+
+class AvailableDates(TypedDict):
+    available_dates: list[str]
 
 
 class RawEpicImage(TypedDict):

@@ -1,4 +1,8 @@
 .vscode
+dist
+nasasync.egg-info
+
+demo/__pycache__/*
 nasa/__pycache__/*
 nasa/_types/__pycache__/*
 nasa/.env

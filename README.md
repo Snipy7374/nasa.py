@@ -91,20 +91,34 @@ This library also supports Async requests
 ---
 # Currently supported NASA API endpoints
 - APOD (Astronomy picture of the day) - `/planetary/apod` - (all query parameters)
+- EPIC (Earth Polychromatic Imaging Camera) - `/EPIC/api` - (all)
 
 # TODO
 - ~~Add `is_video` property on AstronomyPicture (based on `media_type`)~~
 - ~~Add support for the `count` query parameter on `/planetary/apod` endpoint to get multiple random image~~
 - ~~Solve typing issues with `typing.overload`s on `client.py`~~
 - Support other endpoints
+    - Mars rover photos
+    - NASA image and video library
 - ~~Add async client & methods~~
 - ~~Add logging~~
 - ~~Add docs :)~~
 - Add developing tools
+    - nox
+    - pyright
+    - black
+    - flake8
+    - pre-commit
 - Add workflows on github
+    - typing check
+    - flake8
+    - black
 - Create the first release
-- Upload the project on PyPi
+    - Add package configuration to publish on pypi (pyproject.toml)
+    - Upload the project on PyPi
 - Customize the docs
+    - add custom colors
 - Add examples
+    - upload on github
 - docs: improve the structure of payloads and add Dev docs
 - docs: add contributing section

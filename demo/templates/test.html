@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../static/style.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nasa.py Demo</title>
+</head>
+<body>
+    {% if apod %}
+    <div class="hold">
+        <h3 class="info"> {{ date }} </h3>
+        <h1 class="info"> {{ apod.title }} </h1>
+        <img src={{ apod.image.url }}>
+        <p class="info"> {{ apod.explanation }} </p>
+        {% else %}
+        <h1>Hi</h1>
+    </div>
+    {% endif %}
+</body>
+</html>

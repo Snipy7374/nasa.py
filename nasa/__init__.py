@@ -11,7 +11,7 @@ __name__ = "nasa.py"
 __author__ = "Snipy7374"
 __copyright__ = "2022-present Snipy7374"
 __license__ = "MIT"
-__version__ = "0.0.1a"
+__version__ = "0.0.2a"
 
 
 class VersionInfo(NamedTuple):
@@ -20,6 +20,6 @@ class VersionInfo(NamedTuple):
     micro: int
     release_level: Literal["alpha", "beta", "final"]
 
-version_info: VersionInfo = VersionInfo(major=0, minor=0, micro=1, release_level="alpha")
+version_info: VersionInfo = VersionInfo(major=0, minor=0, micro=2, release_level="alpha")
 
 logger = logging.getLogger(__name__)
