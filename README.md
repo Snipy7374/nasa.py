@@ -5,10 +5,6 @@
 </p>
 Work in progress
 
-to run the docs use 
-```
-sphinx-autobuild -a docs/source docs/_build/html --watch nasa --open-browser
-```
 
 # Demo
 APOD
@@ -21,8 +17,16 @@ EPIC
 Installation
 ============
 
-Currently the package is not available on pypi, this means that you can't install it using just ``pip``.
-To install ``Nasa.py`` you need to install ``git`` and to run this command
+With PyPi
+---------
+
+.. code-block:: text
+
+    pip install -U nasasync
+
+
+With git
+--------
 
 .. code-block:: text
 
@@ -122,3 +126,8 @@ This library also supports Async requests
     - upload on github
 - docs: improve the structure of payloads and add Dev docs
 - docs: add contributing section
+
+to run the docs use 
+```
+sphinx-autobuild -a docs/source docs/_build/html --watch nasa --open-browser
+```
