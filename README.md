@@ -92,6 +92,11 @@ This library also supports Async requests
 
 <!-- end quickstart -->
 
+Docs
+====
+
+Documentation can be found at https://nasapy-a-nasa-api-python-wrapper.readthedocs.io/en/latest/index.html
+
 ---
 # Currently supported NASA API endpoints
 - APOD (Astronomy picture of the day) - `/planetary/apod` - (all query parameters)
