@@ -18,7 +18,6 @@ Installation
 ============
 
 With PyPi
----------
 
 .. code-block:: text
 
@@ -26,7 +25,6 @@ With PyPi
 
 
 With git
---------
 
 .. code-block:: text
 
