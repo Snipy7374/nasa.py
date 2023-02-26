@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TypedDict
+from typing import TypedDict, Type
 from datetime import datetime
 
 import attrs
@@ -53,7 +53,7 @@ def convert_to_date(string: str) -> datetime:
     return datetime.strptime(string, "%Y-%m-%d")
 
 
-@attrs.define(kw_only=True, repr=True, eq=True)
+@attrs.define(kw_only=True, repr=True, eq=True, slots=True)
 class AstronomyPicture:
     """Represents an apod image object returned by the NASA Api.
 
@@ -140,3 +140,20 @@ class AstronomyPicture:
     def is_image(self) -> bool:
         """:class:`bool`: Whether the ``url`` lead to an image or not."""
         return self.media_type == "image"
+    
+    def as_dict(self) -> dict[str, str]:
+        obj: dict[str, str] = {}
+
+        for i in self.__slots__:  # type: ignore
+            # short circuit to istantly ignore weakref instead of checking
+            # everything
+            if i == "__weakref__":
+                continue
+            attr = self.__getattribute__(i)
+            if isinstance(attr, str):
+                obj[i] = attr
+            elif isinstance(attr, datetime):
+                obj[i] = datetime.strftime(attr, "%Y-%m-%d")
+            elif isinstance(attr, (SyncAsset, AsyncAsset)):
+                continue
+        return obj

@@ -10,6 +10,8 @@ from asyncio import AbstractEventLoop
 import aiohttp
 from aiohttp.client_exceptions import ContentTypeError
 
+from .errors import HTTPException
+
 _log = logging.getLogger(__name__)
 
 
@@ -59,11 +61,18 @@ class HTTPClient(_BaseHTTPClient):
         response = self._session.request(method=route.method, headers=headers, params=params, url=route.url)
 
         try:
-            _log.debug("[%s] from %s %s", response.status_code, route.path, response.text)
-            return response.json()
+            response_content: dict[str, str] = response.json()  # type: ignore
         except:
-            _log.error("[%s] from %s %s", response.status_code, route.path, response.text)
-            return response
+            response_content: str = response.text
+
+        if isinstance(response_content, dict):
+            _log.debug("[%s] from %s %s", response.status_code, route.path, response.text)
+            if response.status_code == 200:
+                return response_content
+            raise HTTPException(response)
+
+        _log.error("[%s] from %s %s", response.status_code, route.path, response.text)
+        raise HTTPException(response)
     
     @staticmethod
     def get_image_as_bytes(url: str) -> bytes:
@@ -119,7 +128,10 @@ class AsyncHTTPClient(_BaseHTTPClient):
             except ContentTypeError:
                 content = await resp.text()
                 _log.error("[%s] from %s %s", resp.status, route.path, content)
-            return content
+
+            if resp.status == 200:
+                return content
+            raise HTTPException(resp, content)
 
     @staticmethod
     async def get_image_as_bytes(url: str) -> bytes:
